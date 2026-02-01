@@ -1,1 +1,10 @@
 /AI/.venv
+/AI/Dataset
+1755507204_fa270542.jpg
+/AI/debug_vis
+/AI/detection_logs
+/AI/pipe_ai_env
+/runs
+AI/yolov8n.pt
+AI/data.yaml
+model_testing.py
