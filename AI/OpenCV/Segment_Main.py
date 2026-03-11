@@ -343,7 +343,7 @@ def interactive_parameter_tuning(img, method):
 
 if __name__ == '__main__':
     import os
-    img = cv2.imread('./AI/test_pic/DO25110213_1_nikhon.jpg')
+    img = cv2.imread('1755507204_fa270542.jpg')
     
     if img is None:
         print("Error: Could not load image!")
