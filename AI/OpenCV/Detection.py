@@ -38,10 +38,24 @@ def auto_detect_pipes(image_path):
 
 
 # Run the test
-image_path = "est_pic/DO25110210_4_nikhon.jpg"  # CHANGE THIS to your image path
+
+
+pic=[
+    "./test_pic/DO25110210_4_nikhon.jpg",
+    "./test_pic/DO25110213_1_nikhon.jpg",
+    "./test_pic/DO25110220_1_Pittawat.jpg",
+    "./test_pic/DO25110257_3_Pittawat.jpg",
+    "./test_pic/DO25110261_1_Pittawat.jpg",
+    "./test_pic/DO25110277_2_Pittawat.jpg",
+    "./test_pic/DO25110284_2_Pittawat.jpg",
+    "./test_pic/Front_pipe.webp",
+    "./test_pic/Metal_Pipe.jpg"
+    ]
+random_pic=pic[0]
+
 
 print("Testing pipe detection...")
-circles, labels, img = auto_detect_pipes(image_path)
+circles, labels, img = auto_detect_pipes(random_pic)
 
 if circles is not None:
     print(f"✓ SUCCESS! Detected {len(labels)} pipes")

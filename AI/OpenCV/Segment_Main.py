@@ -343,7 +343,21 @@ def interactive_parameter_tuning(img, method):
 
 if __name__ == '__main__':
     import os
-    img = cv2.imread('1755507204_fa270542.jpg')
+    import random
+    pic=[
+        "./test_pic/DO25110210_4_nikhon.jpg",
+        "./test_pic/DO25110213_1_nikhon.jpg",
+        "./test_pic/DO25110220_1_Pittawat.jpg",
+        "./test_pic/DO25110257_3_Pittawat.jpg",
+        "./test_pic/DO25110261_1_Pittawat.jpg",
+        "./test_pic/DO25110277_2_Pittawat.jpg",
+        "./test_pic/DO25110284_2_Pittawat.jpg",
+        "./test_pic/Front_pipe.webp",
+        "./test_pic/Metal_Pipe.jpg"
+        ]
+    random_pic=random.choice(pic)
+
+    img = cv2.imread(random_pic)
     
     if img is None:
         print("Error: Could not load image!")

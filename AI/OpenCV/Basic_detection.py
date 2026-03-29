@@ -364,18 +364,18 @@ def auto_tune_parameters(image_path: str, target_range: Tuple[int, int] = (30, 1
 # =============================================================================
 if __name__ == "__main__":
     list_path = [
-        "AI/test_pic/DO25110210_4_nikhon.jpg",
-        "AI/test_pic/DO25110213_1_nikhon.jpg",
-        "AI/test_pic/DO25110220_1_Pittawat.jpg",
-        "AI/test_pic/DO25110257_3_Pittawat.jpg",
-        "AI/test_pic/DO25110261_1_Pittawat.jpg",
-        "AI/test_pic/DO25110277_2_Pittawat.jpg",
-        "AI/test_pic/DO25110284_2_Pittawat.jpg",
-        "AI/test_pic/Front_pipe.webp",
-        "AI/test_pic/Metal_Pipe.jpg"
+        "./test_pic/DO25110210_4_nikhon.jpg",
+        "./test_pic/DO25110213_1_nikhon.jpg",
+        "./test_pic/DO25110220_1_Pittawat.jpg",
+        "./test_pic/DO25110257_3_Pittawat.jpg",
+        "./test_pic/DO25110261_1_Pittawat.jpg",
+        "./test_pic/DO25110277_2_Pittawat.jpg",
+        "./test_pic/DO25110284_2_Pittawat.jpg",
+        "./test_pic/Front_pipe.webp",
+        "./test_pic/Metal_Pipe.jpg"
     ]
     
-    img_path = random.choice(list_path)
+    img_path = list_path[8]  # Change index to test different images
     
     # Example 1: Basic usage with improved defaults
     print("="*70)
@@ -399,7 +399,7 @@ if __name__ == "__main__":
     print("EXAMPLE 2: Auto-tuning")
     print("="*70 + "\n")
     
-    best_config, count = auto_tune_parameters(img_path, target_range=(40, 80))
+    best_config, count = auto_tune_parameters(img_path, target_range=(35, 40))
     
     # Use best config
     detector2 = HoughPipeDetector()
