@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture / Upload preview</title>
+<style>
+:root{--blue:#2563eb;--blue-d:#1d4ed8;--bg:#f9fafb;--card:#fff;--line:#e5e7eb;--line2:#d1d5db;--tx:#1f2937;--tx2:#4b5563;--green:#15803d;--red:#b91c1c;--amber-bg:#fef3c7;--amber:#78350f}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Thai",sans-serif;background:var(--bg);color:var(--tx);line-height:1.4}
+/* preview bar: lets friends switch between phone and desktop width. Not part of the real app. */
+.bar{position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#111827;color:#e5e7eb;font-size:13px}
+.bar button{min-height:36px;padding:0 14px;border-radius:8px;border:1px solid #4b5563;background:#1f2937;color:#e5e7eb;cursor:pointer;font:inherit}
+.bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.stage{display:flex;justify-content:center;padding:0}
+/* layout breakpoint follows the frame width (container query), so the Mobile frame shows the phone layout even on a PC */
+.frame{width:100%;background:var(--bg);min-height:calc(100dvh - 52px);container-type:inline-size}
+.stage.phone{padding:16px;background:#e5e7eb}
+.stage.phone .frame{width:375px;max-width:100%;border:10px solid #111827;border-radius:28px;overflow:hidden;min-height:0;height:760px;overflow-y:auto}
+header.app{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+header.app div{max-width:672px;margin:0 auto;padding:12px 16px}
+header.app h1{margin:0;font-size:20px;color:#1d4ed8;display:flex;flex-direction:column}
+header.app h1 small{font-size:14px;font-weight:400;color:var(--tx2)}
+main{max-width:672px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border-radius:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);padding:20px;display:flex;flex-direction:column;gap:16px}
+.step{display:flex;align-items:center;gap:12px}
+.badge{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;display:grid;place-items:center;flex:none}
+.step h2{margin:0;font-size:18px;display:flex;flex-direction:column}
+.step h2 small{font-size:13px;font-weight:400;color:var(--tx2)}
+.btn{min-height:48px;width:100%;border-radius:10px;border:0;font:inherit;font-weight:600;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px}
+.btn.cam{background:#f3f4f6;color:#374151}.btn.cam:hover{background:#e5e7eb}
+.btn.go{background:var(--blue);color:#fff}.btn.go:hover{background:var(--blue-d)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.drop:focus-within{outline:3px solid var(--blue);outline-offset:2px}
+.or{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:14px}.or:before,.or:after{content:"";flex:1;border-top:1px solid var(--line2)}
+.drop{display:block;border:2px dashed var(--line2);border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--blue);background:#eff6ff}
+.drop svg{width:44px;height:44px;color:#9ca3af}.drop p{margin:6px 0 0;color:var(--tx2)}
+.drop p.en{font-size:14px;color:#6b7280}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lim{margin:0;font-size:14px;color:var(--tx2)}
+.alert{border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:8px;padding:12px;font-size:14px}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+li{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+li img{width:64px;height:64px;border-radius:8px;object-fit:cover;background:#f3f4f6;flex:none}
+.meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sz{font-size:14px;color:var(--tx2)}
+.st{font-size:14px;display:flex;align-items:center;gap:6px}
+.st.queued{color:var(--tx2)}.st.uploading{color:#1d4ed8}.st.done{color:var(--green);font-weight:600}.st.failed{color:var(--red);font-weight:600}
+.dark{width:fit-content;background:var(--amber-bg);color:var(--amber);border-radius:6px;padding:4px 8px;font-size:14px}
+.rm{width:44px;height:44px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-size:20px;color:var(--tx2);flex:none}
+.rm:hover{background:#f3f4f6}
+.spin{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:#1d4ed8;border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.cta{position:sticky;bottom:0;margin:0 -16px;padding:8px 16px 16px;background:rgba(249,250,251,.95)}
+@container (min-width:640px){main{padding:32px 24px}header.app div{padding:16px 24px}header.app h1{font-size:24px}.cta{position:static;margin:0;padding:0;background:none}.cam-row{display:flex;gap:12px;align-items:center}.cam-row .btn{flex:1}.cam-row .or{display:none}}
+.note{max-width:672px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:#6b7280;text-align:center}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span>Preview ตัวอย่างหน้า / sample screen:</span>
+  <button id="bm" aria-pressed="false">📱 Mobile</button>
+  <button id="bp" aria-pressed="true">🖥 PC</button>
+</div>
+<div class="stage" id="stage"><div class="frame" id="frame">
+<header class="app"><div><h1>ตัวนับท่อเหล็ก<small>Steel Pipe Detector (Prototype)</small></h1></div></header>
+<main>
+ <section class="card" aria-labelledby="t1">
+  <div class="step"><span class="badge">1</span><h2 id="t1">ถ่าย / อัปโหลดรูป<small>Capture / Upload</small></h2></div>
+  <div class="cam-row">
+   <label class="btn cam" for="cam" style="cursor:pointer">📷 ถ่ายรูปด้วยกล้อง · Take photo</label>
+   <input class="sr" id="cam" type="file" accept="image/*" capture="environment" multiple>
+   <div class="or">หรือ · or</div>
+  </div>
+  <label class="drop" id="drop" for="pick">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+   <p>แตะเพื่อเลือกรูป (ได้หลายรูป)</p><p class="en">Tap to choose photos, or drag and drop</p>
+  </label>
+  <input class="sr" id="pick" type="file" accept="image/*" multiple>
+  <p class="lim" id="lim"></p>
+  <div class="alert" id="alert" role="alert" hidden></div>
+  <ul id="list" aria-live="polite"></ul>
+ </section>
+ <div class="cta" id="cta" hidden><button class="btn go" id="go"></button></div>
+</main>
+<p class="note">หน้าตัวอย่างอย่างเดียว: จำนวนท่อเป็นตัวเลขสุ่ม ไม่ได้เรียก API · Static preview only: counts are random, no API call.</p>
+</div></div>
+<script>
+const MAX=10, MB=15; let items=[], busy=false, n=0;
+const $=s=>document.querySelector(s);
+const el={list:$('#list'),alert:$('#alert'),lim:$('#lim'),cta:$('#cta'),go:$('#go'),drop:$('#drop')};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function add(files){
+  const msgs=[];
+  for(const f of files){
+    if(!f.type.startsWith('image/')){msgs.push(`${f.name} ไม่ใช่ไฟล์รูป · is not an image`);continue}
+    if(f.size>MB*1048576){msgs.push(`${f.name} ใหญ่เกิน ${MB} MB · is over ${MB} MB`);continue}
+    if(items.length>=MAX){msgs.push(`เพิ่มได้สูงสุด ${MAX} รูป รูปที่เกินไม่ถูกเพิ่ม · Max ${MAX} photos, the extra ones were not added`);break}
+    items.push({id:++n,f,url:URL.createObjectURL(f),st:'queued'});
+  }
+  el.alert.hidden=!msgs.length; el.alert.innerHTML=[...new Set(msgs)].map(m=>`<p style="margin:0">${esc(m)}</p>`).join('');
+  render();
+}
+function stat(i){
+  if(i.st==='queued')return '<span class="st queued">⏳ รอส่ง · Queued</span>';
+  if(i.st==='uploading')return '<span class="st uploading"><span class="spin"></span> กำลังส่ง… · Uploading…</span>';
+  if(i.st==='done')return `<span class="st done">✔ พบ ${i.c} ท่อ · ${i.c} pipes</span>`+(i.dark?'<span class="dark">🌙 ภาพมืดเกินไป ถ่ายใหม่ในที่สว่างขึ้น · Too dark, retake with more light</span>':'');
+  return '<span class="st failed">⚠ ไม่สำเร็จ · Failed</span><span class="sz">Server error (demo)</span>';
+}
+function render(){
+  el.lim.textContent=`สูงสุด ${MAX} รูป รูปละไม่เกิน ${MB} MB · Max ${MAX} photos, ${MB} MB each (${items.length}/${MAX})`;
+  el.list.innerHTML=items.map(i=>`<li><img src="${i.url}" alt=""><div class="meta"><span class="name" title="${esc(i.f.name)}">${esc(i.f.name)}</span><span class="sz">${(i.f.size/1048576).toFixed(1)} MB</span>${stat(i)}</div><button class="rm" data-id="${i.id}" aria-label="ลบ ${esc(i.f.name)} · Remove" ${busy||i.st==='uploading'?'disabled':''}>✕</button></li>`).join('');
+  const p=items.filter(i=>i.st!=='done').length;
+  el.cta.hidden=!items.length;
+  el.go.disabled=busy||!p;
+  el.go.textContent=busy?'กำลังอัปโหลด… · Uploading…':p?`⬆ อัปโหลด ${p} รูป · Upload ${p}`:'อัปโหลดครบแล้ว · All uploaded';
+}
+el.list.addEventListener('click',e=>{const b=e.target.closest('.rm');if(!b)return;const i=items.find(x=>x.id==b.dataset.id);URL.revokeObjectURL(i.url);items=items.filter(x=>x!==i);render()});
+$('#pick').onchange=e=>{add([...e.target.files]);e.target.value=''};
+$('#cam').onchange=e=>{add([...e.target.files]);e.target.value=''};
+['dragenter','dragover'].forEach(t=>el.drop.addEventListener(t,e=>{e.preventDefault();if(!busy)el.drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>el.drop.addEventListener(t,e=>{e.preventDefault();el.drop.classList.remove('over')}));
+el.drop.addEventListener('drop',e=>{if(!busy)add([...e.dataTransfer.files])});
+el.go.onclick=()=>{
+  busy=true; const todo=items.filter(i=>i.st!=='done'); todo.forEach(i=>i.st='uploading'); render();
+  todo.forEach((i,k)=>setTimeout(()=>{
+    // demo only: random result. ~1 in 6 fails, ~1 in 5 "dark"
+    if(Math.random()<.17){i.st='failed'}else{i.st='done';i.c=20+Math.floor(Math.random()*60);i.dark=Math.random()<.2}
+    if(todo.every(x=>x.st!=='uploading')){busy=false}
+    render();
+  },700+k*450));
+};
+// preview toggle
+const stage=$('#stage'),bm=$('#bm'),bp=$('#bp');
+function mode(m){stage.classList.toggle('phone',m==='m');bm.setAttribute('aria-pressed',m==='m');bp.setAttribute('aria-pressed',m!=='m')}
+bm.onclick=()=>mode('m');bp.onclick=()=>mode('p');
+if(innerWidth<700){mode('p');$('.bar').hidden=true} // real phone: show the page full-width
+render();
+</script>
+</body>
+</html>

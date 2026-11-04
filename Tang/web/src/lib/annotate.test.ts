@@ -1,0 +1,38 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { COLOR_LOW, COLOR_OK, drawBoxes, renderAnnotatedPng } from './annotate'
+import type { DetectedPipe } from './detection'
+
+const pipe = (x: number, c: number): DetectedPipe => ({ box: [x, 0, 10, 10], confidence: c, lowConfidence: c < 0.5 })
+
+function fakeCtx() {
+  return { strokeRect: vi.fn(), drawImage: vi.fn(), strokeStyle: '', lineWidth: 0 }
+}
+
+afterEach(() => vi.unstubAllGlobals())
+
+describe('drawBoxes', () => {
+  it('draws one rectangle per pipe, low confidence in the other color', () => {
+    const ctx = fakeCtx()
+    const colors: string[] = []
+    ctx.strokeRect.mockImplementation(() => colors.push(ctx.strokeStyle))
+    drawBoxes(ctx as unknown as CanvasRenderingContext2D, [pipe(0, 0.9), pipe(20, 0.2), pipe(40, 0.8)], 2)
+    expect(ctx.strokeRect).toHaveBeenCalledTimes(3)
+    expect(ctx.strokeRect).toHaveBeenCalledWith(20, 0, 10, 10)
+    expect(colors).toEqual([COLOR_OK, COLOR_LOW, COLOR_OK])
+  })
+})
+
+describe('renderAnnotatedPng', () => {
+  it('draws the photo then N boxes and returns a PNG blob', async () => {
+    const ctx = fakeCtx()
+    const blob = new Blob(['png'], { type: 'image/png' })
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue({ width: 800, height: 600, close: vi.fn() }))
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctx as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((cb) => cb(blob))
+
+    const out = await renderAnnotatedPng(new File(['x'], 'a.png'), [pipe(0, 0.9), pipe(20, 0.2)])
+    expect(out).toBe(blob)
+    expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+    expect(ctx.strokeRect).toHaveBeenCalledTimes(2)
+  })
+})
