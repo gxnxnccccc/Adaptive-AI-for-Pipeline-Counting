@@ -1,20 +1,28 @@
 // Draws pipe boxes onto a canvas and downloads files. Box numbers come from detection.ts (toRect).
-import { toRect, type DetectedPipe } from './detection'
+import type { PhotoEdits } from './corrections'
+import { toRect, type Box, type DetectedPipe } from './detection'
 
-export const COLOR_OK = '#16a34a' // green-600
-export const COLOR_LOW = '#f97316' // orange-500: low confidence, please review
+// ui-v2 tokens: accent / warn / ok (same colours as the viewer).
+export const COLOR_OK = '#22d3ee'
+export const COLOR_LOW = '#fbbf24' // low confidence, please review
+export const COLOR_ADDED = '#4ade80' // added by the user
 
-export function drawBoxes(ctx: CanvasRenderingContext2D, pipes: DetectedPipe[], lineWidth: number) {
-  ctx.lineWidth = lineWidth
-  for (const p of pipes) {
-    const { x, y, w, h } = toRect(p.box)
-    ctx.strokeStyle = p.lowConfidence ? COLOR_LOW : COLOR_OK
+// Corrected boxes: model boxes minus the removed ones, then the user-added ones.
+export function drawBoxes(ctx: CanvasRenderingContext2D, pipes: DetectedPipe[], lineWidth: number, edits?: PhotoEdits) {
+  const stroke = (box: Box, color: string) => {
+    const { x, y, w, h } = toRect(box)
+    ctx.strokeStyle = color
     ctx.strokeRect(x, y, w, h)
   }
+  ctx.lineWidth = lineWidth
+  pipes.forEach((p, i) => {
+    if (!edits?.removed.includes(i)) stroke(p.box, p.lowConfidence ? COLOR_LOW : COLOR_OK)
+  })
+  edits?.added.forEach((b) => stroke(b, COLOR_ADDED))
 }
 
-// The original photo with boxes burned in, as a PNG.
-export async function renderAnnotatedPng(file: File, pipes: DetectedPipe[]): Promise<Blob> {
+// The photo with the (corrected) boxes burned in, as a PNG. Pass the upload file: boxes are in its pixel space.
+export async function renderAnnotatedPng(file: File, pipes: DetectedPipe[], edits?: PhotoEdits): Promise<Blob> {
   const bmp = await createImageBitmap(file)
   const canvas = document.createElement('canvas')
   canvas.width = bmp.width
@@ -23,7 +31,7 @@ export async function renderAnnotatedPng(file: File, pipes: DetectedPipe[]): Pro
   if (!ctx) throw new Error('Canvas not supported')
   ctx.drawImage(bmp, 0, 0)
   bmp.close?.()
-  drawBoxes(ctx, pipes, Math.max(2, Math.round(bmp.width / 400)))
+  drawBoxes(ctx, pipes, Math.max(2, Math.round(canvas.width / 400)), edits)
   return new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG export failed'))), 'image/png'),
   )

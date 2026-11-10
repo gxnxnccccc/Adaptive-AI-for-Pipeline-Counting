@@ -39,6 +39,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stats/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Daily Stats */
+        get: operations["get_daily_stats_api_stats_daily_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stats": {
         parameters: {
             query?: never;
@@ -130,6 +147,8 @@ export interface components {
             notes: string;
             /** Image Ids */
             image_ids?: string[] | null;
+            /** Corrections */
+            corrections?: components["schemas"]["ImageCorrection"][] | null;
         };
         /** CountsResponse */
         CountsResponse: {
@@ -138,10 +157,53 @@ export interface components {
             /** Images */
             images: components["schemas"]["ImageResult"][];
         };
+        /** DailyStatsResponse */
+        DailyStatsResponse: {
+            /** Days */
+            days: components["schemas"]["DayStats"][];
+        };
+        /** DayStats */
+        DayStats: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Detections */
+            detections: number;
+            /** Pipes Actual */
+            pipes_actual: number;
+            /** Confirmed */
+            confirmed: number;
+            /** Corrected */
+            corrected: number;
+            /** Correction Rate */
+            correction_rate: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ImageCorrection */
+        ImageCorrection: {
+            /** Image Id */
+            image_id: string;
+            /**
+             * Added
+             * @default []
+             */
+            added: [
+                number,
+                number,
+                number,
+                number
+            ][];
+            /**
+             * Removed
+             * @default []
+             */
+            removed: number[];
         };
         /** ImageResult */
         ImageResult: {
@@ -305,6 +367,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BatchRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_daily_stats_api_stats_daily_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyStatsResponse"];
                 };
             };
             /** @description Validation Error */

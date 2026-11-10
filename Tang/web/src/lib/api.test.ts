@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildRecordsQuery, confirmBatch, getRecordCounts, getStats, listAllRecords, listRecords } from './api'
+import { buildRecordsQuery, confirmBatch, getDailyStats, getStats, listRecords, uploadImages } from './api'
 
 const rec = (n: number) => ({
   batch_id: `b${n}`,
@@ -39,37 +39,28 @@ describe('records query', () => {
     expect(page.items[0].batchId).toBe('b1')
     await expect(listRecords({})).rejects.toThrow('database not configured: x')
   })
-
-  it('listAllRecords pages by 100 and stops at the cap', async () => {
-    const f = vi.fn((url: string) => {
-      const off = Number(new URL(url, 'http://x').searchParams.get('offset'))
-      return json({ items: Array.from({ length: 100 }, (_, i) => rec(off + i)), total: 5000 })
-    })
-    vi.stubGlobal('fetch', f)
-    const all = await listAllRecords({ filter: 'confirmed' }, 250)
-    expect(all).toHaveLength(250)
-    expect(f).toHaveBeenCalledTimes(3)
-  })
-
-  it('getRecordCounts asks once per tab with limit=1', async () => {
-    const f = vi.fn((url: string) => json({ items: [], total: url.includes('status=draft') ? 3 : 9 }))
-    vi.stubGlobal('fetch', f)
-    expect(await getRecordCounts('q')).toEqual({ all: 9, confirmed: 9, draft: 3, flagged: 9 })
-    expect(f.mock.calls.every(([u]) => String(u).includes('limit=1&'))).toBe(true)
-  })
 })
 
 describe('confirm + stats', () => {
-  it('confirmBatch posts the right body', async () => {
+  it('confirmBatch posts the right body, incl. image_ids and corrections', async () => {
     const f = vi.fn().mockReturnValue(json({ ...rec(1), status: 'confirmed', do_number: 'DX1', actual_amount: 4 }))
     vi.stubGlobal('fetch', f)
-    const r = await confirmBatch('b1', { doNumber: ' DX1 ', actualAmount: 4, notes: ' hi ', imageIds: ['img_1', 'img_3'] })
+    const corrections = [
+      { image_id: 'img_1', removed: [0, 5], added: [[120, 340, 48, 47] as [number, number, number, number]] },
+      { image_id: 'img_3', removed: [2], added: [] },
+    ]
+    const r = await confirmBatch('b1', { doNumber: ' DX1 ', actualAmount: 4, notes: ' hi ', imageIds: ['img_1', 'img_3'], corrections })
+    expect(String(f.mock.calls[0][0])).toContain('/api/counts/b1/confirm')
     expect(f.mock.calls[0][1].method).toBe('POST')
     expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({
       do_number: 'DX1',
       actual_amount: 4,
       notes: 'hi',
       image_ids: ['img_1', 'img_3'],
+      corrections: [
+        { image_id: 'img_1', removed: [0, 5], added: [[120, 340, 48, 47]] },
+        { image_id: 'img_3', removed: [2], added: [] },
+      ],
     })
     expect(r.doNumber).toBe('DX1')
   })
@@ -77,7 +68,7 @@ describe('confirm + stats', () => {
   it('confirmBatch throws the API detail (409)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(json({ detail: 'batch already confirmed' }, 409)))
     await expect(
-      confirmBatch('b', { doNumber: 'a', actualAmount: 1, notes: 'n', imageIds: ['img_1'] }),
+      confirmBatch('b', { doNumber: 'a', actualAmount: 1, notes: 'n', imageIds: ['img_1'], corrections: [] }),
     ).rejects.toThrow('batch already confirmed')
   })
 
@@ -87,5 +78,43 @@ describe('confirm + stats', () => {
       vi.fn().mockReturnValue(json({ detections_today: 2, confirmed_total: 0, correction_rate: null, failed_images_today: 1 })),
     )
     expect(await getStats()).toEqual({ detectionsToday: 2, confirmedTotal: 0, correctionRate: null, failedImagesToday: 1 })
+  })
+
+  it('getDailyStats asks for N days and maps snake_case -> camelCase, null rate kept', async () => {
+    const f = vi.fn().mockReturnValue(
+      json({
+        days: [
+          { date: '2026-11-08', detections: 0, pipes_actual: 0, confirmed: 0, corrected: 0, correction_rate: null },
+          { date: '2026-11-09', detections: 5, pipes_actual: 412, confirmed: 4, corrected: 1, correction_rate: 0.25 },
+        ],
+      }),
+    )
+    vi.stubGlobal('fetch', f)
+    expect(await getDailyStats(2)).toEqual([
+      { date: '2026-11-08', detections: 0, pipesActual: 0, confirmed: 0, corrected: 0, correctionRate: null },
+      { date: '2026-11-09', detections: 5, pipesActual: 412, confirmed: 4, corrected: 1, correctionRate: 0.25 },
+    ])
+    expect(String(f.mock.calls[0][0])).toContain('/api/stats/daily?days=2')
+  })
+
+  it('getDailyStats defaults to 7 days and throws the API detail', async () => {
+    const f = vi.fn().mockReturnValue(json({ detail: 'database not configured: x' }, 503))
+    vi.stubGlobal('fetch', f)
+    await expect(getDailyStats()).rejects.toThrow('database not configured: x')
+    expect(String(f.mock.calls[0][0])).toContain('/api/stats/daily?days=7')
+  })
+})
+
+describe('uploadImages', () => {
+  const file = new File(['x'], 'a.jpg', { type: 'image/jpeg' })
+
+  it('throws the API detail on an error status (503)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(json({ detail: 'detector not ready' }, 503)))
+    await expect(uploadImages([file], 'OP')).rejects.toThrow('detector not ready')
+  })
+
+  it("maps a network failure (fetch TypeError) to the bilingual can't-reach-API text", async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+    await expect(uploadImages([file], 'OP')).rejects.toThrow("เชื่อมต่อ API ไม่ได้ · Can't reach the API.")
   })
 })

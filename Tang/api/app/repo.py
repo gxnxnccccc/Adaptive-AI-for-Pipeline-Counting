@@ -34,14 +34,25 @@ class InvalidImages(Exception):
     """image_ids empty or not part of this batch -> HTTP 422."""
 
 
+class InvalidCorrections(Exception):
+    """corrections name a photo that is not kept, or a pipe index that photo does not have -> HTTP 422."""
+
+
 class Repo(Protocol):
     def create_batch(self, operator_id: str, images: list[dict]) -> str: ...
     def confirm_batch(
-        self, batch_id: str, do_number: str, actual_amount: int, notes: str, image_ids: list[str] | None = None
+        self,
+        batch_id: str,
+        do_number: str,
+        actual_amount: int,
+        notes: str,
+        image_ids: list[str] | None = None,
+        corrections: list[dict] | None = None,
     ) -> dict: ...
     def get_batch(self, batch_id: str) -> dict | None: ...
     def list_batches(self, status: str | None, q: str, limit: int, offset: int) -> tuple[list[dict], int]: ...
     def stats(self, day_start: datetime, day_end: datetime) -> dict: ...
+    def daily_rows(self, start: datetime, end: datetime) -> dict: ...
 
 
 # ---- shared rules (both repos must behave the same) ----
@@ -59,19 +70,52 @@ def clean_q(q: str | None) -> str:
     return "".join(ch for ch in (q or "") if ch.isalnum() or ch in " -").strip()
 
 
+def _position(image_id: str) -> int | None:
+    """`img_<n>` -> n, anything else -> None."""
+    n = image_id[4:] if image_id.startswith("img_") else ""
+    return int(n) if n.isdigit() else None
+
+
 def kept_positions(image_ids: list[str] | None, positions: list[int]) -> set[int]:
     """`img_<n>` ids -> upload positions to keep. None = keep all. Empty or unknown ids -> InvalidImages."""
     if image_ids is None:
         return set(positions)
     kept = set()
     for image_id in image_ids:
-        n = image_id[4:] if image_id.startswith("img_") else ""
-        if not n.isdigit() or int(n) not in positions:
+        n = _position(image_id)
+        if n not in positions:
             raise InvalidImages(image_id)
-        kept.add(int(n))
+        kept.add(n)
     if not kept:
         raise InvalidImages("no images kept")
     return kept
+
+
+def correction_plan(corrections: list[dict] | None, imgs: list[dict], kept: set[int]) -> list[tuple[dict, list, list]]:
+    """Check every correction against this batch BEFORE anything is written.
+    corrections: [{image_id, added: [[x,y,w,h]], removed: [pipe index]}] (shape already checked by the schema).
+    imgs: image rows with position + model_count (= number of model pipes, so the index range).
+    -> [(image row, removed indexes, added boxes)]."""
+    by_pos = {i["position"]: i for i in imgs}
+    plan = []
+    for c in corrections or []:
+        n = _position(c["image_id"])
+        if n not in kept:  # unknown id, or a photo the operator removed
+            raise InvalidCorrections(f"{c['image_id']}: not a kept photo of this batch")
+        img = by_pos[n]
+        out_of_range = [i for i in c["removed"] if i >= img["model_count"]]
+        if out_of_range:
+            raise InvalidCorrections(f"{c['image_id']}: pipe index {out_of_range[0]} out of range")
+        plan.append((img, c["removed"], [list(b) for b in c["added"]]))
+    return plan
+
+
+def _added_rows(image_id: str, boxes: list) -> list[dict]:
+    # confidence null: the operator is not a model score (DB comment: null for user_added)
+    return [
+        {"image_id": image_id, "box": b, "confidence": None, "source": "user_added", "removed": False, "position": None}
+        for b in boxes
+    ]
 
 
 def _valid_uuid(value: str) -> bool:
@@ -89,9 +133,17 @@ def _image_rows(batch_id: str, images: list[dict]) -> tuple[list[dict], list[dic
     for img in images:
         image_id = str(uuid.uuid4())
         image_rows.append({"id": image_id, "batch_id": batch_id, **{k: v for k, v in img.items() if k != "pipes"}})
+        # position = index in the upload response pipes[] (migration 20261109_pipes_position.sql)
         pipe_rows += [
-            {"image_id": image_id, "box": p["box"], "confidence": p["confidence"], "source": "model", "removed": False}
-            for p in img.get("pipes", [])
+            {
+                "image_id": image_id,
+                "box": p["box"],
+                "confidence": p["confidence"],
+                "source": "model",
+                "removed": False,
+                "position": n,
+            }
+            for n, p in enumerate(img.get("pipes", []))
         ]
     return image_rows, pipe_rows
 
@@ -148,7 +200,13 @@ class SupabaseRepo:
         return _flatten(res.data[0]) if res.data else None
 
     def confirm_batch(
-        self, batch_id: str, do_number: str, actual_amount: int, notes: str, image_ids: list[str] | None = None
+        self,
+        batch_id: str,
+        do_number: str,
+        actual_amount: int,
+        notes: str,
+        image_ids: list[str] | None = None,
+        corrections: list[dict] | None = None,
     ) -> dict:
         if not _valid_uuid(batch_id):
             raise NotFound(batch_id)
@@ -158,8 +216,9 @@ class SupabaseRepo:
         if current["status"] != "draft":
             raise AlreadyConfirmed(batch_id)
         # model_total comes from the kept images only (column images.excluded: migration 20261104_images_excluded.sql)
-        imgs = self._run(self._db.table("images").select("position, model_count").eq("batch_id", batch_id)).data
+        imgs = self._run(self._db.table("images").select("id, position, model_count").eq("batch_id", batch_id)).data
         kept = kept_positions(image_ids, [i["position"] for i in imgs])
+        plan = correction_plan(corrections, imgs, kept)  # validate everything before the first write
         values = {
             "status": "confirmed",
             "do_number": do_number,
@@ -177,6 +236,18 @@ class SupabaseRepo:
             self._run(
                 self._db.table("images").update({"excluded": True}).eq("batch_id", batch_id).in_("position", dropped)
             )
+        for img, removed, _ in plan:
+            if removed:
+                self._run(
+                    self._db.table("pipes")
+                    .update({"removed": True})
+                    .eq("image_id", img["id"])
+                    .eq("source", "model")
+                    .in_("position", removed)
+                )
+        added = [row for img, _, boxes in plan for row in _added_rows(img["id"], boxes)]
+        if added:
+            self._run(self._db.table("pipes").insert(added))
         row = self.get_batch(batch_id)
         if row is None:
             raise NotFound(batch_id)
@@ -218,6 +289,22 @@ class SupabaseRepo:
             ),
         }
 
+    def daily_rows(self, start: datetime, end: datetime) -> dict:
+        """{"created": [created_at], "confirmed": [{confirmed_at, model_total, actual_amount}]} in [start, end)."""
+        s, e = start.isoformat(), end.isoformat()
+        created = self._run(self._db.table("batches").select("created_at").gte("created_at", s).lt("created_at", e))
+        confirmed = self._run(
+            self._db.table("batches")
+            .select("confirmed_at, model_total, actual_amount")
+            .eq("status", "confirmed")
+            .gte("confirmed_at", s)
+            .lt("confirmed_at", e)
+        )
+        return {
+            "created": [datetime.fromisoformat(r["created_at"]) for r in created.data],
+            "confirmed": [{**r, "confirmed_at": datetime.fromisoformat(r["confirmed_at"])} for r in confirmed.data],
+        }
+
 
 def _flatten(row: dict) -> dict:
     """PostgREST returns images(count) as [{"count": n}]."""
@@ -228,13 +315,27 @@ def _flatten(row: dict) -> dict:
 
 
 _supabase_repo: SupabaseRepo | None = None
+# Demo-only shared store: single-worker, not thread-safe, data lost on restart.
+_demo_repo: "InMemoryRepo | None" = None
+
+
+def storage_mode() -> str:
+    """"supabase" | "memory" (demo, lost on restart) | "none" (-> 503)."""
+    if is_configured():
+        return "supabase"
+    return "memory" if settings.demo_memory else "none"
 
 
 def get_repo() -> Repo:
     """FastAPI dependency. Tests replace it via app.dependency_overrides."""
-    global _supabase_repo
-    if not is_configured():
+    global _supabase_repo, _demo_repo
+    mode = storage_mode()
+    if mode == "none":
         raise RepoUnavailable("database not configured: set SUPABASE_URL and SUPABASE_SECRET_KEY in api/.env")
+    if mode == "memory":  # one shared instance, so data survives between requests
+        if _demo_repo is None:
+            _demo_repo = InMemoryRepo()
+        return _demo_repo
     if _supabase_repo is None:
         _supabase_repo = SupabaseRepo(settings.supabase_url, settings.supabase_secret_key)
     return _supabase_repo
@@ -276,7 +377,13 @@ class InMemoryRepo:
         return {**row, "image_count": sum(1 for i in self.images if i["batch_id"] == batch_id)}
 
     def confirm_batch(
-        self, batch_id: str, do_number: str, actual_amount: int, notes: str, image_ids: list[str] | None = None
+        self,
+        batch_id: str,
+        do_number: str,
+        actual_amount: int,
+        notes: str,
+        image_ids: list[str] | None = None,
+        corrections: list[dict] | None = None,
     ) -> dict:
         row = self.batches.get(batch_id)
         if row is None:
@@ -285,8 +392,14 @@ class InMemoryRepo:
             raise AlreadyConfirmed(batch_id)
         imgs = [i for i in self.images if i["batch_id"] == batch_id]
         kept = kept_positions(image_ids, [i["position"] for i in imgs])
+        plan = correction_plan(corrections, imgs, kept)
         for i in imgs:
             i["excluded"] = i["position"] not in kept
+        for img, removed, boxes in plan:
+            for p in self.pipes:
+                if p["image_id"] == img["id"] and p["source"] == "model" and p["position"] in removed:
+                    p["removed"] = True
+            self.pipes += _added_rows(img["id"], boxes)
         row.update(
             status="confirmed",
             do_number=do_number,
@@ -318,4 +431,15 @@ class InMemoryRepo:
             "confirmed_total": sum(1 for r in rows if r["status"] == "confirmed"),
             "flagged_total": sum(1 for r in rows if is_flagged(r)),
             "failed_images_today": sum(1 for i in self.images if i["error"] is not None and today(i)),
+        }
+
+    def daily_rows(self, start: datetime, end: datetime) -> dict:
+        rows = self.batches.values()
+        return {
+            "created": [r["created_at"] for r in rows if start <= r["created_at"] < end],
+            "confirmed": [
+                {k: r[k] for k in ("confirmed_at", "model_total", "actual_amount")}
+                for r in rows
+                if r["status"] == "confirmed" and start <= r["confirmed_at"] < end
+            ],
         }

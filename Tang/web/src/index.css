@@ -1,48 +1,97 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+/* Light tokens copied from docs/design/preview/capture-upload.html (Tang, 2026-11-10: the whole app
+   follows that preview). Names stay the same so components keep working. */
+@theme {
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-raised: #f3f4f6;
+  --color-line: #e5e7eb;
+  --color-line-2: #d1d5db;
+  --color-tx: #1f2937;
+  --color-tx-2: #4b5563;
+  --color-tx-3: #6b7280;
+  --color-accent: #2563eb;
+  --color-accent-hi: #1d4ed8;
+  --color-accent-ink: #ffffff;
+  --color-ok: #15803d;
+  --color-ok-surface: #dcfce7; /* success toast background */
+  --color-warn: #78350f;
+  --color-err: #b91c1c;
+  --color-photo-bg: #e5e7eb; /* behind photos */
+  --color-err-hi: #991b1b; /* error detail text */
+  --color-viz-1: #2563eb;
+  --color-viz-2: #7c3aed;
+
+  --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --radius-chip: 6px;
+  --radius-control: 10px;
+  --radius-card: 16px;
+
+  /* soft light shadows (preview .card: 0 4px 6px -1px rgba(0,0,0,.1)) */
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-pop: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Shell switches sidebar <-> top bar + tab bar at 960 px (preview container query). */
+  --breakpoint-desk: 60rem;
+
+  --animate-api-pulse: api-pulse 2s infinite;
+  @keyframes api-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0.6); }
+    70% { box-shadow: 0 0 0 7px rgb(74 222 128 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0); }
+  }
+
+  /* Processing: scan line over detecting thumbnails + indeterminate bar (preview .scan / .pbar.ind) */
+  --animate-scan: scan 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  @keyframes scan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(340%); }
+  }
+  --animate-ind: ind 1.2s ease-in-out infinite;
+  @keyframes ind {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(300%); }
+  }
+  /* done banner: bar fills while waiting to open Result (duration set inline) */
+  --animate-fill: fill linear forwards;
+  @keyframes fill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-tx);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  ::placeholder {
+    color: #9ca3af;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

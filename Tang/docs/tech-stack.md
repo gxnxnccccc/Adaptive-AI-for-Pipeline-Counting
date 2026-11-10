@@ -22,6 +22,9 @@ Apps never talk to Supabase directly for writes. Everything goes through FastAPI
 |---|---|---|---|
 | UI design | **Figma** | wireframes -> hi-fi -> clickable prototype; team + professor can comment; specs for the coder | pen + paper |
 | Web | Vite + React + TypeScript + Tailwind | fast setup, phone-browser friendly, same React mindset as Guy's RN | Next.js |
+| Charts | `recharts@3.10.1` (lazy chunk) + `react-is@19.3.1` pin | Dashboard charts; recharts alone resolves react-is 17, broken on React 19 | hand-rolled SVG |
+| Fonts | `@fontsource` IBM Plex Sans Thai + JetBrains Mono | self-hosted, demo room may be offline | Google Fonts CDN |
+| Dialog / toast | hand-rolled ConfirmDialog + Toast | no shadcn AlertDialog / sonner deps for 2 small components | shadcn AlertDialog, sonner |
 | Web state/data | TanStack Query | upload status, retries, caching | fetch + useState |
 | Camera/upload | `<input type="file" accept="image/*" capture multiple>` | every phone browser, multi-image (P3) | `getUserMedia` (later, live guidance P1) |
 | Client compression | canvas -> WebP/JPEG resize before upload | smaller uploads on factory Wi-Fi (P5) | browser-image-compression |
@@ -32,6 +35,10 @@ Apps never talk to Supabase directly for writes. Everything goes through FastAPI
 | Mock detector | OpenCV `HoughCircles` in `api/app/detector.py` | real-ish circles from real photos = a working baseline; ML model replaces it later | random fake data |
 | Server compression | Pillow -> WebP (or AVIF), tuned quality | P5, measurable | JPEG re-encode |
 | Quality proof (P5) | SSIM + PSNR (scikit-image), original vs compressed | numbers for the report | visual check |
+| Docker Compose | `docker-compose.yml`: `api` + `web` services | a friend runs the whole demo with one command, no keys (API uses `DEMO_MEMORY`) | run uvicorn + npm by hand |
+| API image | `python:3.12-slim` + uvicorn :8000 | small, same Python as dev | full python image |
+| Web image | `node:20-alpine` build -> `nginx:1.27-alpine` | static bundle served by nginx, tiny final image | `vite preview` |
+| nginx proxy | serves the web on 8080, proxies `/api/` and `/health` to `api`, `client_max_body_size 160m` | same origin = no CORS; 10 x 15 MB uploads fit | CORS config |
 | Tests | Vitest + RTL (web), pytest + TestClient (API) | standard | Jest |
 
 ## 3. Supabase setup (draft, apply via migration in week 2-3)

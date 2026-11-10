@@ -1,0 +1,23 @@
+# Demo: docker compose up --build  ->  http://localhost:8080  (no keys needed, data lives in RAM)
+services:
+  api:
+    build: ./api
+    environment:
+      DEMO_MEMORY: "true"
+    # Real Supabase instead of RAM: copy api/.env.example to api/.env, fill keys, then uncomment (compose v2.24+):
+    # env_file:
+    #   - path: ./api/.env
+    #     required: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy

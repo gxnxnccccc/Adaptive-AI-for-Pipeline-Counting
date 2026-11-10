@@ -1,7 +1,8 @@
 import type { components } from './api-types'
 import type { CountsResponse } from './detection'
+import { bi, t } from './i18n'
 
-const base = () => import.meta.env.VITE_API_URL
+const base = () => import.meta.env.VITE_API_URL ?? '' // '' = same origin (nginx proxy in Docker)
 
 type Schemas = components['schemas']
 
@@ -23,13 +24,15 @@ export async function uploadImages(files: File[], operatorId = 'unknown'): Promi
   for (const f of files) form.append('images', f)
   form.append('operator_id', operatorId)
 
-  const res = await fetch(`${base()}/api/counts`, {
-    method: 'POST',
-    body: form,
-  })
-  if (!res.ok) {
-    throw new Error(`Upload failed: ${res.status} ${res.statusText}`)
+  let res: Response
+  try {
+    res = await fetch(`${base()}/api/counts`, { method: 'POST', body: form })
+  } catch (e) {
+    // fetch rejects with a TypeError when the API can't be reached (down, wrong URL, CORS).
+    if (e instanceof TypeError) throw new Error(bi(t.apiDownTitle), { cause: e })
+    throw e
   }
+  if (!res.ok) throw new Error(await errorText(res, 'Upload'))
   return (await res.json()) as CountsResponse
 }
 
@@ -93,35 +96,16 @@ export async function listRecords(query: RecordsQuery): Promise<RecordsPage> {
   return { items: body.items.map(toRecord), total: body.total }
 }
 
-export const EXPORT_CAP = 1000
-
-// Every row of the current filter + search (pages of 100), at most `cap` rows.
-export async function listAllRecords(query: RecordsQuery, cap = EXPORT_CAP): Promise<RecordRow[]> {
-  const out: RecordRow[] = []
-  for (;;) {
-    const page = await listRecords({ ...query, limit: 100, offset: out.length })
-    out.push(...page.items)
-    if (page.items.length === 0 || out.length >= page.total || out.length >= cap) return out.slice(0, cap)
-  }
-}
-
-// Tab counts: one limit=1 request per filter and read `total` (the API has no group-by).
-export async function getRecordCounts(q: string): Promise<Record<RecordFilter, number>> {
-  const filters: RecordFilter[] = ['all', 'confirmed', 'draft', 'flagged']
-  const pages = await Promise.all(filters.map((filter) => listRecords({ filter, q, limit: 1 })))
-  return Object.fromEntries(filters.map((f, i) => [f, pages[i].total])) as Record<RecordFilter, number>
-}
-
-// Total number of records (for the sidebar badge). Throws when the API errors.
-export async function getCountsTotal(): Promise<number> {
-  const res = await fetch(`${base()}/api/counts?limit=1`)
-  if (!res.ok) throw new Error(`Records failed: ${res.status}`)
-  return ((await res.json()) as Schemas['RecordsResponse']).total
-}
-
 // ---- Confirm ----
 
-export type ConfirmInput = { doNumber: string; actualAmount: number; notes: string; imageIds: string[] }
+// corrections: per-box edits of the kept photos (from toCorrections() in corrections.ts); [] = none.
+export type ConfirmInput = {
+  doNumber: string
+  actualAmount: number
+  notes: string
+  imageIds: string[]
+  corrections: Schemas['ImageCorrection'][]
+}
 
 export async function confirmBatch(batchId: string, input: ConfirmInput): Promise<RecordRow> {
   const body: Schemas['ConfirmRequest'] = {
@@ -129,6 +113,7 @@ export async function confirmBatch(batchId: string, input: ConfirmInput): Promis
     actual_amount: input.actualAmount,
     notes: input.notes.trim(),
     image_ids: input.imageIds,
+    corrections: input.corrections,
   }
   const res = await fetch(`${base()}/api/counts/${encodeURIComponent(batchId)}/confirm`, {
     method: 'POST',
@@ -158,4 +143,29 @@ export async function getStats(): Promise<Stats> {
     correctionRate: s.correction_rate ?? null,
     failedImagesToday: s.failed_images_today,
   }
+}
+
+// One Bangkok calendar day (GET /api/stats/daily). `date` is a plain YYYY-MM-DD, never parse it as UTC.
+export type DailyStat = {
+  date: string
+  detections: number
+  pipesActual: number
+  confirmed: number
+  corrected: number
+  correctionRate: number | null
+}
+
+// `days` entries, oldest first, last = today (zero-filled by the API).
+export async function getDailyStats(days = 7): Promise<DailyStat[]> {
+  const res = await fetch(`${base()}/api/stats/daily?days=${days}`)
+  if (!res.ok) throw new Error(await errorText(res, 'Daily stats'))
+  const body = (await res.json()) as Schemas['DailyStatsResponse']
+  return body.days.map((d) => ({
+    date: d.date,
+    detections: d.detections,
+    pipesActual: d.pipes_actual,
+    confirmed: d.confirmed,
+    corrected: d.corrected,
+    correctionRate: d.correction_rate ?? null,
+  }))
 }

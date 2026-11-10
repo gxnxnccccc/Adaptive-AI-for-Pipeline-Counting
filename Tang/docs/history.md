@@ -2,6 +2,13 @@
 
 Short update log so any session can continue. Details live in plans, decisions, and the problem log.
 
+## 2026-11-10 (Tue)
+**Done**
+- One light design for the whole app (from `capture-upload.html`); dark ui-v2 look dropped, 4 dark previews deleted. Processing rebuilt to match the preview (CTA button, no auto-navigate).
+- API `DEMO_MEMORY` in-memory mode + `/health` `storage` field. Docker compose (api + web/nginx on 8080). Tests: api 98, web 196 pass.
+**Open**
+- First real `docker compose up --build` (Docker not installed here).
+
 ## 2026-11-04 (Wed)
 **Done**
 - Figma Make read via MCP -> `docs/design/capture-upload.md` (now marked REFERENCE, not final).

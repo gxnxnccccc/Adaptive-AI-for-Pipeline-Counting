@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import DropZone from './DropZone'
 
 describe('DropZone', () => {
@@ -37,5 +38,39 @@ describe('DropZone', () => {
       dataTransfer: { files: [new File(['x'], 'a.png', { type: 'image/png' })] },
     })
     expect(onFiles).not.toHaveBeenCalled()
+  })
+
+  describe('with a live camera (getUserMedia available)', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+      Reflect.deleteProperty(navigator, 'mediaDevices')
+    })
+    const withCamera = (gum: () => Promise<MediaStream>) =>
+      Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn(gum) } })
+
+    it('Open camera opens the modal; Esc closes it and focus returns to the button', async () => {
+      withCamera(() => new Promise(() => {}))
+      const user = userEvent.setup()
+      render(<DropZone onFiles={() => {}} />)
+      const open = screen.getByRole('button', { name: /Take photo/ })
+      expect(screen.queryByLabelText(/ถ่ายรูป/, { selector: 'input' })).not.toBeInTheDocument()
+      await user.click(open)
+      expect(screen.getByRole('dialog', { name: /Camera/ })).toBeInTheDocument()
+      await user.keyboard('{Escape}')
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(open).toHaveFocus()
+    })
+
+    it('no camera -> Choose photos instead closes the modal and opens the photo picker', async () => {
+      withCamera(() => Promise.reject(new DOMException('x', 'NotFoundError')))
+      const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+      const user = userEvent.setup()
+      render(<DropZone onFiles={() => {}} />)
+      await user.click(screen.getByRole('button', { name: /Take photo/ }))
+      await user.click(await screen.findByRole('button', { name: /Choose photos instead/ }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(click).toHaveBeenCalledOnce()
+      expect(click.mock.contexts[0]).not.toHaveAttribute('capture')
+    })
   })
 })

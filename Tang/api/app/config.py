@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_secret_key: str = ""
     supabase_bucket: str = "pipe-images"
+    demo_memory: bool = False  # DEMO_MEMORY=true: keep data in RAM when no Supabase keys (Docker demo)
     max_files_per_request: int = 10
     max_file_bytes: int = 15 * 1024 * 1024
 

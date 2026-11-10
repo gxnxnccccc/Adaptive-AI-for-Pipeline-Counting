@@ -1,29 +1,39 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCountsTotal, getHealth } from '@/lib/api'
+import { getHealth } from '@/lib/api'
 import App from './App'
 
-vi.mock('@/lib/api', () => ({ uploadImages: vi.fn(), getHealth: vi.fn(), getCountsTotal: vi.fn() }))
+vi.mock('@/lib/api', () => ({
+  uploadImages: vi.fn(),
+  getHealth: vi.fn(),
+  getStats: vi.fn(() => new Promise(() => {})),
+  listRecords: vi.fn(() => new Promise(() => {})),
+  getDailyStats: vi.fn(() => new Promise(() => {})),
+}))
 const health = vi.mocked(getHealth)
-const total = vi.mocked(getCountsTotal)
 
+function Where() {
+  return <output data-testid="path">{useLocation().pathname}</output>
+}
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <App />
+      <Where />
     </MemoryRouter>,
   )
 }
+const path = () => screen.getByTestId('path')
 const idField = () => screen.getByLabelText(/Operator ID/)
 const pwField = () => screen.getByLabelText(/^รหัสผ่าน/)
+const signedIn = () => localStorage.setItem('spds.operator', 'OP-07')
 
 beforeEach(() => {
   localStorage.clear()
   sessionStorage.clear()
   health.mockReset().mockResolvedValue(true)
-  total.mockReset().mockResolvedValue(7)
 })
 
 async function signIn(user: ReturnType<typeof userEvent.setup>) {
@@ -32,18 +42,38 @@ async function signIn(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /เข้าสู่ระบบ/ }))
 }
 
-describe('auth + shell', () => {
+describe('routes + auth', () => {
   it('protected route redirects to login when logged out', () => {
-    renderAt('/records')
+    renderAt('/dashboard')
+    expect(path()).toHaveTextContent('/login')
     expect(idField()).toBeInTheDocument()
   })
 
-  it('/ goes to login, then to New Detection after login', async () => {
+  it('/ goes to login, then to /processing after login', async () => {
     const user = userEvent.setup()
     renderAt('/')
     await signIn(user)
     expect(await screen.findByRole('heading', { name: /ถ่าย \/ อัปโหลดรูป/ })).toBeInTheDocument()
+    expect(path()).toHaveTextContent('/processing')
     expect(localStorage.getItem('spds.operator')).toBe('OP-7')
+  })
+
+  it.each(['/nope', '/new', '/records'])('%s goes to /processing when signed in', (p) => {
+    signedIn()
+    renderAt(p)
+    expect(path()).toHaveTextContent('/processing')
+  })
+
+  it('/result without a detection session goes to /processing', () => {
+    signedIn()
+    renderAt('/result')
+    expect(path()).toHaveTextContent('/processing')
+  })
+
+  it('/login when already signed in goes to /processing', () => {
+    signedIn()
+    renderAt('/login')
+    expect(path()).toHaveTextContent('/processing')
   })
 
   it('empty form is blocked', async () => {
@@ -60,31 +90,58 @@ describe('auth + shell', () => {
     expect(screen.getByText(/Demo login only/)).toBeInTheDocument()
   })
 
-  it('logout returns to login', async () => {
+  it('logout returns to /login', async () => {
     const user = userEvent.setup()
     renderAt('/login')
     await signIn(user)
-    await user.click(await screen.findByRole('button', { name: /ออกจากระบบ/ }))
+    // Sidebar (desktop) and top bar (phone) both have a logout button; CSS hides one.
+    await user.click((await screen.findAllByRole('button', { name: /ออกจากระบบ/ }))[0])
+    expect(path()).toHaveTextContent('/login')
     expect(idField()).toBeInTheDocument()
     expect(localStorage.getItem('spds.operator')).toBeNull()
   })
+})
 
-  it('shows records badge and green API chip', async () => {
-    const user = userEvent.setup()
-    renderAt('/login')
-    await signIn(user)
-    expect(await screen.findByTestId('records-badge')).toHaveTextContent('7')
-    expect(await screen.findByTestId('api-status')).toHaveTextContent(/^API$/)
+describe('AppShell', () => {
+  it('shows the operator, page title and 2 nav items with no Records link', () => {
+    signedIn()
+    renderAt('/dashboard')
+    expect(screen.getAllByText('OP-07').length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { level: 1, name: /แดชบอร์ด/ })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /แดชบอร์ด/ })[0]).toHaveAttribute('aria-current', 'page')
+    expect(screen.getAllByRole('link', { name: /ตรวจนับใหม่/ })[0]).not.toHaveAttribute('aria-current')
+    expect(screen.queryByRole('link', { name: /Records/ })).not.toBeInTheDocument()
   })
 
-  it('red chip and no badge when the API is down', async () => {
+  it('2-step flow: step 1 is current on /processing, no flow on /dashboard', () => {
+    signedIn()
+    const { unmount } = renderAt('/processing')
+    const current = screen.getByTestId('flow').querySelectorAll('[aria-current="step"]')
+    expect(current).toHaveLength(1)
+    expect(current[0]).toHaveTextContent(/1.*Capture/)
+    unmount()
+    renderAt('/dashboard')
+    expect(screen.queryByTestId('flow')).not.toBeInTheDocument()
+  })
+
+  it('API chip: checking while /health is pending', () => {
+    health.mockReturnValue(new Promise(() => {}))
+    signedIn()
+    renderAt('/processing')
+    expect(screen.getByTestId('api-status')).toHaveAttribute('data-api', 'checking')
+    expect(screen.getByTestId('api-status')).toHaveAccessibleName(/Checking API/)
+  })
+
+  it('API chip: online', async () => {
+    signedIn()
+    renderAt('/processing')
+    expect(await screen.findByRole('status', { name: /API online/ })).toHaveAttribute('data-api', 'online')
+  })
+
+  it('API chip: offline', async () => {
     health.mockResolvedValue(false)
-    total.mockRejectedValue(new Error('x'))
-    const user = userEvent.setup()
-    renderAt('/login')
-    await signIn(user)
-    expect(await screen.findByTestId('api-status')).toHaveTextContent(/offline/)
-    await waitFor(() => expect(total).toHaveBeenCalled())
-    expect(screen.queryByTestId('records-badge')).not.toBeInTheDocument()
+    signedIn()
+    renderAt('/processing')
+    expect(await screen.findByRole('status', { name: /API offline/ })).toHaveAttribute('data-api', 'offline')
   })
 })
