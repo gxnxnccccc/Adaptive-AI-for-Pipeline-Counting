@@ -15,7 +15,10 @@ Owner: Tang (Phutiphum Thongin). Teammates: read freely, please don't edit, open
 | `docs/history.md` | What was done and what is next |
 | `docs/problem-log.md` | Problems for the final report |
 
-## Run with Docker (easiest)
+## Run the bundle (no Docker, no Node)
+Install Python 3.12+, then double-click `demo/start.bat` (Mac/Linux: `demo/start.sh`). Opens http://localhost:8000 with the whole app. Details: [demo/README.md](demo/README.md).
+
+## Run with Docker
 1. Install Docker Desktop and start it.
 2. ```bash
    git clone https://github.com/gxnxnccccc/Adaptive-AI-for-Pipeline-Counting

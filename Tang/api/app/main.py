@@ -1,10 +1,13 @@
 import math
+import os
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi import HTTPException
 
 from app.config import settings
 from app.repo import RepoUnavailable, storage_mode
@@ -39,3 +42,17 @@ def validation_error(request: Request, exc: RequestValidationError):
 @app.get("/health")
 def health():
     return {"status": "ok", "storage": storage_mode()}
+
+
+# Bundle mode: if demo/site/ (the built web app) exists, this API serves it too, so one process = the whole app.
+SITE = Path(os.environ.get("SPDS_SITE") or Path(__file__).resolve().parents[2] / "demo" / "site")
+if (SITE / "index.html").is_file():
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def site(path: str):
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404)
+        f = (SITE / path).resolve()
+        if path and f.is_file() and SITE.resolve() in f.parents:
+            return FileResponse(f)
+        return FileResponse(SITE / "index.html")  # client-side routes (/processing, /result, ...)
