@@ -1,3 +1,5 @@
+> **SUPERSEDED 2026-11-10.** The whole app now uses the light look of `docs/design/preview/capture-upload.html`. See `docs/plans/light-ui-docker.md`. Kept for the report history; the dark previews are deleted. Functions below still apply, colors do not.
+
 # UI v2: "Dark control room" (4 screens)
 
 Source of truth for the look: the HTML previews in `docs/design/preview/` (decision 2026-11-04: design in code/HTML, not Figma).

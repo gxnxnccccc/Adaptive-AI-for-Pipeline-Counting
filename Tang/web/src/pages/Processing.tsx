@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { ArrowRight, Check, CircleAlert, CircleCheck, Info, LoaderCircle, RefreshCw, ScanLine } from 'lucide-react'
+import { ArrowRight, CircleAlert, CircleCheck, Info, LoaderCircle, RefreshCw, Upload } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import DropZone from '@/components/DropZone'
 import PhotoRow, { warnings, type QueueRow } from '@/components/PhotoRow'
@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { uploadImages } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
-import { formatBytes } from '@/lib/compress'
 import { toDetectedImages } from '@/lib/detection'
 import { useDetectionSession, type SessionPhoto } from '@/lib/detection-session'
 import { bi, t, type Pair } from '@/lib/i18n'
@@ -20,18 +19,13 @@ import { preparePhoto, type Prepared } from '@/lib/prepare'
 const MAX_FILES = 10
 const MAX_FILE_MB = 15
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
-// Done banner shows this long before Result opens on its own (Review skips the wait).
-export const REVIEW_DELAY_MS = 1_500
 
-// idle -> running (one POST /api/counts for all ready photos) -> done (navigate) | error (photos kept, retry)
+// idle -> running (one POST /api/counts for all ready photos) -> done (Review button -> /result) | error (photos kept, retry)
 type Phase = 'idle' | 'running' | 'done' | 'error'
 type Summary = { counted: number; sent: number; pipes: number }
 
 const En = ({ children }: { children: ReactNode }) => (
   <span className="text-[12.5px] font-normal tracking-[.01em] text-tx-3">{children}</span>
-)
-const Tag = ({ children }: { children: string }) => (
-  <span className="font-mono text-xs font-medium tracking-[.08em] text-tx-3 uppercase">{children}</span>
 )
 const Spin = () => <LoaderCircle aria-hidden="true" className="size-5 motion-safe:animate-spin" />
 
@@ -69,12 +63,6 @@ export default function Processing() {
       m.clear()
     }
   }, [])
-
-  useEffect(() => {
-    if (phase !== 'done') return
-    const id = setTimeout(() => navigate('/result'), REVIEW_DELAY_MS)
-    return () => clearTimeout(id)
-  }, [phase, navigate])
 
   const patch = (id: string, p: Partial<QueueRow>) => setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...p } : r)))
 
@@ -184,31 +172,28 @@ export default function Processing() {
     }
   }
 
-  // Upload-size bar: every photo that will be sent (decode failures left out).
-  const sized = rows.filter((r) => r.status !== 'failed' || r.prep)
-  const origTotal = sized.reduce((s, r) => s + r.original.size, 0)
-  const upTotal = sized.reduce((s, r) => s + (r.prep?.uploadBytes ?? 0), 0)
-  const sizePct = origTotal ? Math.round((1 - upTotal / origTotal) * 100) : 0
   const warnCount = ready.filter((r) => warnings(r.prep.quality).length > 0).length
 
-  let cta: { label: Pair; icon: ReactNode; disabled: boolean; help?: Pair }
-  if (phase === 'running') cta = { label: t.stRunning, icon: <Spin />, disabled: true, help: t.keepOpen }
-  else if (phase === 'done') cta = { label: t.openingReview, icon: <Spin />, disabled: true }
-  else if (preparing) cta = { label: t.preparing, icon: <Spin />, disabled: true, help: t.preparingHelp }
-  else if (ready.length === 0) cta = { label: t.detect, icon: <ScanLine aria-hidden="true" />, disabled: true, help: t.addOne }
-  else if (phase === 'error') cta = { label: t.tryAgain, icon: <RefreshCw aria-hidden="true" />, disabled: false }
+  let cta: { label: Pair; icon: ReactNode; disabled: boolean; help?: Pair; onClick: () => void }
+  if (phase === 'running') cta = { label: t.uploadingAll, icon: <Spin />, disabled: true, help: t.keepOpen, onClick: onDetect }
+  else if (phase === 'done')
+    cta = { label: t.reviewResults, icon: <ArrowRight aria-hidden="true" className="size-5" />, disabled: false, onClick: () => navigate('/result') }
+  else if (preparing) cta = { label: t.preparing, icon: <Spin />, disabled: true, help: t.preparingHelp, onClick: onDetect }
+  else if (ready.length === 0) cta = { label: t.uploadN(0), icon: <Upload aria-hidden="true" className="size-5" />, disabled: true, onClick: onDetect }
+  else if (phase === 'error') cta = { label: t.tryAgain, icon: <RefreshCw aria-hidden="true" className="size-5" />, disabled: false, onClick: onDetect }
   else
     cta = {
-      label: t.detectN(ready.length),
-      icon: <ScanLine aria-hidden="true" />,
+      label: t.uploadN(ready.length),
+      icon: <Upload aria-hidden="true" className="size-5" />,
       disabled: false,
       help: warnCount ? t.warnHelp(warnCount) : undefined,
+      onClick: onDetect,
     }
 
-  const limits = t.limitsNote(MAX_FILES, MAX_FILE_MB)
+  const limit = t.limitLine(rows.length, MAX_FILES, MAX_FILE_MB)
 
   return (
-    <div className="flex flex-col gap-4 desk:gap-5">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <Toast message={toast} onClose={closeToast} />
 
       {/* Screen readers hear only finished photos (done / failed), not every checking / compressing step. */}
@@ -237,7 +222,7 @@ export default function Processing() {
           <Button asChild className="whitespace-normal">
             <Link to="/result">
               <span>{t.backToReview.th}</span>
-              <span className="text-[12.5px] font-medium text-accent-ink/75">{t.backToReview.en}</span>
+              <span className="text-[12.5px] font-medium text-accent-ink/90">{t.backToReview.en}</span>
               <ArrowRight aria-hidden="true" className="size-5" />
             </Link>
           </Button>
@@ -289,124 +274,55 @@ export default function Processing() {
               </p>
             )
           })()}
-          <Button onClick={() => navigate('/result')}>
-            <span>{t.review.th}</span>
-            <span className="text-[12.5px] font-medium text-accent-ink/75">{t.review.en}</span>
-            <ArrowRight aria-hidden="true" className="size-5" />
-          </Button>
-          <div aria-hidden="true" className="ml-8 h-1.5 basis-full overflow-hidden rounded-[3px] bg-raised">
-            <i
-              className="block h-full origin-left animate-fill rounded-[3px] bg-accent motion-reduce:animate-none"
-              style={{ animationDuration: `${REVIEW_DELAY_MS}ms` }}
-            />
-          </div>
         </div>
       )}
 
-      <div className="flex flex-col gap-4 desk:gap-5 min-[1100px]:grid min-[1100px]:grid-cols-[minmax(360px,5fr)_minmax(0,7fr)] min-[1100px]:items-start">
-        <Card role="region" aria-labelledby="h-cap" className="gap-0 py-0">
-          <div className="px-4 pt-4">
-            <h2 id="h-cap" className="flex flex-col text-[17px] leading-tight font-bold">
-              <Tag>01 · Input</Tag>
-              <span>{t.step1.th}</span>
-              <En>{t.step1.en}</En>
-            </h2>
-          </div>
-          <div className="flex flex-col gap-3.5 p-4">
-            <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
-            <p className="flex items-start gap-2 text-sm text-tx-2">
-              <Info aria-hidden="true" className="mt-px size-4 shrink-0 text-accent" />
-              <span className="flex flex-col leading-tight">
-                <span>{limits.th}</span>
-                <En>{limits.en}</En>
-              </span>
-            </p>
-            {notices.length > 0 && (
-              <div role="alert" className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-sm">
-                <CircleAlert aria-hidden="true" className="mt-px size-5 shrink-0 text-err" />
-                <div className="flex flex-col gap-1">
-                  {notices.map((m) => (
-                    <p key={m}>{m}</p>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex flex-col gap-2 border-t border-line pt-3.5">
-              <Tag>{bi(t.tips)}</Tag>
-              <ul className="flex flex-col gap-1.5">
-                {t.tipList.map((p) => (
-                  <li key={p.en} className="flex items-start gap-2 text-sm">
-                    <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
-                    <span className="flex flex-col leading-tight">
-                      <span>{p.th}</span>
-                      <En>{p.en}</En>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+      <Card role="region" aria-labelledby="h-cap" className="gap-4 p-4 shadow-md min-[640px]:p-5">
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-bold text-accent-ink">
+            1
+          </span>
+          <h2 id="h-cap" className="flex flex-col text-lg leading-tight font-bold">
+            <span>{t.step1.th}</span>
+            <En>{t.step1.en}</En>
+          </h2>
+        </div>
+
+        <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
+
+        <p data-testid="queue-count" className="text-sm text-tx-2">
+          {limit.th} · {limit.en}
+        </p>
+
+        {notices.length > 0 && (
+          <div role="alert" className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-sm text-err-hi">
+            <CircleAlert aria-hidden="true" className="mt-px size-5 shrink-0 text-err" />
+            <div className="flex flex-col gap-1">
+              {notices.map((m) => (
+                <p key={m}>{m}</p>
+              ))}
             </div>
           </div>
-        </Card>
+        )}
 
-        <Card role="region" aria-labelledby="h-q" className="gap-0 py-0">
-          <div className="flex items-start gap-3 px-4 pt-4">
-            <h2 id="h-q" className="flex flex-col text-[17px] leading-tight font-bold">
-              <Tag>02 · Queue</Tag>
-              <span>{t.queueTitle.th}</span>
-              <En>{t.queueTitle.en}</En>
-            </h2>
-            <span data-testid="queue-count" className="ml-auto pt-[18px] font-mono text-[15px] text-tx-2 tabular-nums">
-              <b className="text-xl text-tx">{rows.length}</b>/{MAX_FILES}
-            </span>
-          </div>
+        {rows.length > 0 && (
+          <ul data-testid="queue-rows" className="flex flex-col gap-3">
+            {rows.map((r) => (
+              <PhotoRow key={r.id} row={r} running={phase === 'running'} removeDisabled={busy} onRemove={remove} />
+            ))}
+          </ul>
+        )}
+      </Card>
 
-          <div className="p-4">
-            {rows.length > 0 ? (
-              <>
-                <p
-                  data-testid="upload-size"
-                  className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5 rounded-control border border-line bg-bg px-3 py-2.5 text-sm"
-                >
-                  <Tag>{bi(t.uploadSize)}</Tag>{' '}
-                  <span className="font-mono text-tx tabular-nums">
-                    {formatBytes(origTotal)} → {preparing ? '…' : formatBytes(upTotal)}
-                  </span>{' '}
-                  {!preparing && sizePct > 0 && <span className="font-mono text-ok tabular-nums">−{sizePct}%</span>}
-                </p>
-                <ul data-testid="queue-rows" className="flex flex-col gap-2.5">
-                  {rows.map((r) => (
-                    <PhotoRow key={r.id} row={r} running={phase === 'running'} removeDisabled={busy} onRemove={remove} />
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-1.5 px-4 py-9 text-center text-tx-2">
-                <svg viewBox="0 0 120 72" aria-hidden="true" className="mb-1.5 h-[72px] w-[120px] fill-none stroke-2 [stroke-dasharray:4_4]">
-                  <circle cx="38" cy="46" r="18" className="stroke-line-2" />
-                  <circle cx="82" cy="46" r="18" className="stroke-line-2" />
-                  <circle cx="60" cy="22" r="18" className="stroke-accent" />
-                </svg>
-                <b className="text-tx">{t.queueEmpty.th}</b>
-                <En>{t.queueEmpty.en}</En>
-                <span className="text-sm">{t.queueEmptyHint.th}</span>
-                <En>{t.queueEmptyHint.en}</En>
-              </div>
-            )}
-          </div>
-
-          {/* Phone: sticks above the 60 px tab bar. Desktop: sticks to the bottom of the viewport. */}
-          <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-[5] flex flex-col gap-1.5 rounded-b-card border-t border-line bg-surface px-4 pt-3 pb-4 desk:bottom-0">
-            <Button data-testid="detect-cta" size="lg" className="w-full whitespace-normal" disabled={cta.disabled} onClick={onDetect}>
-              {cta.icon}
-              <span className="flex flex-wrap items-baseline justify-center gap-x-1.5">
-                <span>{cta.label.th}</span>
-                <span className="text-[12.5px] font-medium text-accent-ink/75">{cta.label.en}</span>
-              </span>
-            </Button>
-            {cta.help && <p className="text-center text-[13px] text-tx-3">{bi(cta.help)}</p>}
-          </div>
-        </Card>
-      </div>
+      {rows.length > 0 && (
+        <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-[5] -mx-4 flex flex-col gap-1.5 bg-bg/95 px-4 pt-2 pb-4 min-[640px]:static min-[640px]:mx-0 min-[640px]:bg-transparent min-[640px]:p-0 desk:bottom-0">
+          <Button data-testid="detect-cta" size="lg" className="w-full whitespace-normal" disabled={cta.disabled} onClick={cta.onClick}>
+            {cta.icon}
+            <span>{bi(cta.label)}</span>
+          </Button>
+          {cta.help && <p className="text-center text-[13px] text-tx-3">{bi(cta.help)}</p>}
+        </div>
+      )}
     </div>
   )
 }

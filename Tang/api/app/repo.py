@@ -315,13 +315,27 @@ def _flatten(row: dict) -> dict:
 
 
 _supabase_repo: SupabaseRepo | None = None
+# Demo-only shared store: single-worker, not thread-safe, data lost on restart.
+_demo_repo: "InMemoryRepo | None" = None
+
+
+def storage_mode() -> str:
+    """"supabase" | "memory" (demo, lost on restart) | "none" (-> 503)."""
+    if is_configured():
+        return "supabase"
+    return "memory" if settings.demo_memory else "none"
 
 
 def get_repo() -> Repo:
     """FastAPI dependency. Tests replace it via app.dependency_overrides."""
-    global _supabase_repo
-    if not is_configured():
+    global _supabase_repo, _demo_repo
+    mode = storage_mode()
+    if mode == "none":
         raise RepoUnavailable("database not configured: set SUPABASE_URL and SUPABASE_SECRET_KEY in api/.env")
+    if mode == "memory":  # one shared instance, so data survives between requests
+        if _demo_repo is None:
+            _demo_repo = InMemoryRepo()
+        return _demo_repo
     if _supabase_repo is None:
         _supabase_repo = SupabaseRepo(settings.supabase_url, settings.supabase_secret_key)
     return _supabase_repo

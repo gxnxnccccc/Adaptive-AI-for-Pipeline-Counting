@@ -51,7 +51,7 @@ export default function ConfirmDialog({ title, body, yes, no, onYes, onNo }: Pro
       data-testid="dialog-backdrop"
       // A click on the backdrop must not move focus to <body> (Esc + Tab trap would stop working).
       onMouseDown={(e) => e.target === e.currentTarget && e.preventDefault()}
-      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-bg/78 p-4 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-tx/40 p-4 backdrop-blur-[3px]"
     >
       <div
         ref={boxRef}
@@ -64,7 +64,7 @@ export default function ConfirmDialog({ title, body, yes, no, onYes, onNo }: Pro
         onMouseDown={(e) => {
           if (!(e.target as HTMLElement).closest('button, input, a, select, textarea')) e.preventDefault()
         }}
-        className="w-full max-w-[440px] rounded-card border border-line-2 bg-surface shadow-[0_24px_60px_rgb(0_0_0/0.6)]"
+        className="w-full max-w-[440px] rounded-card border border-line-2 bg-surface shadow-pop"
       >
         <div className="flex items-start gap-3 px-[18px] pt-[18px]">
           <TriangleAlert aria-hidden="true" className="size-7 shrink-0 text-err" />

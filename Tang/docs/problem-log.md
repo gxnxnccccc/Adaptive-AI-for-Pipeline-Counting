@@ -4,6 +4,7 @@ One row per problem. Write it the same day. Keep the "Why it happened" honest, t
 
 | Date | Area | Problem | Why it happened | Fix / workaround | Status |
 |---|---|---|---|---|---|
+| 2026-11-10 | docker | Docker images were never built or run | Docker is not installed on Tang's PC | Verified by reading the files and running the same steps outside Docker (empty `VITE_API_URL` bundle, DEMO_MEMORY API, browser walk at 1366 + 375). Tang or a friend must run `docker compose up --build` once | open |
 | 2026-11-09 | api | A JSON body with NaN/Infinity returned 500 instead of 422. Found while adding FiniteFloat box validation (task 7) | FastAPI's default 422 handler echoes the input back and can't JSON-encode non-finite numbers, so the handler itself crashed | Custom `RequestValidationError` handler in `api/app/main.py` converts non-finite numbers to strings, response stays 422 | fixed |
 | 2026-11-09 | web / process | `tsc -b` broke in another task's files mid-run while two coders worked in parallel | Both touched a shared type (`Compressed` / `SessionPhoto` gained `width` / `height`) | Gave the type change to the 8b coder only. Rule: only one coder at a time touches shared session/photo types | fixed |
 | 2026-11-09 | web | Result PNG strokes were always 2 px | `annotate.ts` read `bmp.width` after `bmp.close()`, which returns 0 | Stroke width now from `canvas.width` + regression test. Found by the tester measuring the PNG | fixed |

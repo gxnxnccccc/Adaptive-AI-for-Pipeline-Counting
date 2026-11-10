@@ -44,7 +44,7 @@ const CSS = `
 .pa-box{opacity:0;animation:pa-pop .35s ease-out forwards;transform-box:fill-box;transform-origin:center}
 @keyframes pa-pop{from{opacity:0;transform:scale(1.25)}to{opacity:1;transform:none}}
 .pa-scan{position:absolute;left:0;right:0;top:0;height:24%;pointer-events:none;
-  background:linear-gradient(to bottom,transparent,rgb(34 211 238 / .28) 85%,rgb(103 232 249 / .95) 100%);
+  background:linear-gradient(to bottom,transparent,rgb(37 99 235 / .28) 85%,rgb(96 165 250 / .95) 100%);
   animation:pa-scan 1.6s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes pa-scan{from{transform:translateY(-100%)}to{transform:translateY(340%)}}
 @media (prefers-reduced-motion:reduce){

@@ -88,7 +88,7 @@ export default function AppShell() {
     <div className="flex min-h-dvh flex-col desk:grid desk:grid-cols-[248px_minmax(0,1fr)] desk:items-start">
       <aside
         aria-label={bi(t.mainMenu)}
-        className="sticky top-0 hidden h-dvh flex-col gap-5 border-r border-line bg-surface/78 px-3.5 py-5 backdrop-blur-sm desk:flex"
+        className="sticky top-0 hidden h-dvh flex-col gap-5 border-r border-line bg-surface px-3.5 py-5 shadow-[1px_0_2px_rgb(0_0_0/0.05)] desk:flex"
       >
         <Brand withSub />
         <nav aria-label={bi(t.menu)} className="flex flex-col gap-1">
@@ -131,7 +131,7 @@ export default function AppShell() {
       </aside>
 
       <div className="flex min-h-dvh min-w-0 flex-col">
-        <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/90 py-2 pr-2 pl-4 backdrop-blur-md desk:hidden">
+        <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-surface py-2 pr-2 pl-4 shadow-[0_1px_2px_rgb(0_0_0/0.05)] desk:hidden">
           <Brand withSub={false} />
           <span className="ml-auto truncate font-mono text-[13px] text-tx-2">{operator}</span>
           <Button variant="ghost" size="icon" aria-label={bi(t.logout)} onClick={logout}>
@@ -154,7 +154,7 @@ export default function AppShell() {
               ) : (
                 <span className="mb-1.5 block font-mono text-xs font-medium tracking-[.08em] text-tx-3 uppercase">SPDS / {page.tag}</span>
               )}
-              <h1 className="flex flex-col gap-0.5 text-[22px] leading-tight font-bold desk:text-[28px]">
+              <h1 className="flex flex-col gap-0.5 text-[22px] leading-tight font-bold text-accent-hi desk:text-[28px]">
                 <span>{page.title.th}</span>
                 <span className="text-[13px] font-medium text-tx-3 desk:text-sm">{page.title.en}</span>
               </h1>
@@ -183,7 +183,7 @@ export default function AppShell() {
 
         <nav
           aria-label={bi(t.menu)}
-          className="sticky bottom-0 z-30 grid grid-cols-2 border-t border-line bg-bg/94 pb-[env(safe-area-inset-bottom)] backdrop-blur-md desk:hidden"
+          className="sticky bottom-0 z-30 grid grid-cols-2 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] desk:hidden"
         >
           {NAV.map((n) => (
             <Link

@@ -1,3 +1,5 @@
+> **2026-11-10: the look was replaced by the light design (`docs/plans/light-ui-docker.md`); the functions below are kept. The dark previews named here are deleted.**
+
 # Plan: ui-v2 (4 pages, "Dark control room")
 Goal: rebuild the web app as Login / Processing / Result / Dashboard in the approved dark look, wired to the existing API. | Requirement: demo scope items 1-7 (P1, P3, P4, P5, item 4 tap-to-edit, item 5 history = Recent 10).
 

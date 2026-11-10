@@ -34,7 +34,7 @@ function Message({ icon, tone, title, hint, role }: { icon: ReactNode; tone: str
   return (
     <div
       role={role}
-      className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_50%_40%,#111a2b,#03060c)] p-6 text-center"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-raised p-6 text-center"
     >
       <span className={cn('mb-1.5 grid size-16 place-items-center rounded-full', tone)}>{icon}</span>
       <h3 className="flex flex-col text-lg font-semibold">
@@ -153,7 +153,7 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
   const taken = t.camTaken(shots.length)
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-bg/80 p-4 backdrop-blur-sm max-sm:p-0">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-tx/40 p-4 backdrop-blur-sm max-sm:p-0">
       <div
         ref={dialogRef}
         role="dialog"
@@ -161,7 +161,7 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
         aria-labelledby="cam-title"
         data-cam={state}
         onKeyDown={onKeyDown}
-        className="flex w-full max-w-[min(760px,calc((100dvh_-_230px)_*_1.333))] flex-col rounded-card border border-line bg-surface shadow-[0_24px_60px_rgb(0_0_0/0.6)] max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
+        className="flex w-full max-w-[min(760px,calc((100dvh_-_230px)_*_1.333))] flex-col rounded-card border border-line bg-surface shadow-pop max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
       >
         <div className="flex items-start gap-3 px-[18px] pt-[18px] max-sm:px-3 max-sm:pt-3">
           <h2 id="cam-title" className="flex flex-col text-lg leading-tight font-bold">
@@ -192,7 +192,7 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
                 <i className="absolute bottom-0 left-0 size-7 border-b-3 border-l-3 border-accent" />
                 <i className="absolute right-0 bottom-0 size-7 border-r-3 border-b-3 border-accent" />
               </div>
-              <span className="absolute top-2.5 left-2.5 inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-ok/40 bg-ok/12 px-2.5 py-0.5 text-[13px] font-semibold text-ok">
+              <span className="absolute top-2.5 left-2.5 inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-ok/40 bg-surface/90 px-2.5 py-0.5 text-[13px] font-semibold text-ok">
                 <span aria-hidden="true" className="size-2 rounded-full bg-current motion-safe:animate-api-pulse" />
                 <span>{t.camLive.th}</span>
                 <span className="text-xs font-normal opacity-85">{t.camLive.en}</span>
@@ -287,7 +287,7 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
               <Images aria-hidden="true" className="size-5" />
               <span className="flex flex-wrap items-baseline gap-x-1.5">
                 <span>{t.camPickInstead.th}</span>
-                <span className="text-[12.5px] font-medium text-accent-ink/75">{t.camPickInstead.en}</span>
+                <span className="text-[12.5px] font-medium text-accent-ink/90">{t.camPickInstead.en}</span>
               </span>
             </Button>
           </div>

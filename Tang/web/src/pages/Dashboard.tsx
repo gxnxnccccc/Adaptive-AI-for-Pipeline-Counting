@@ -66,7 +66,7 @@ const Skel = ({ className }: { className?: string }) => (
 // 4 placeholder cards while the chart data (or the recharts chunk) loads.
 const ChartsSkeleton = () =>
   Array.from({ length: 4 }, (_, i) => (
-    <div key={i} data-testid="chart-loading" className="rounded-card border border-line bg-surface p-4">
+    <div key={i} data-testid="chart-loading" className="rounded-card border border-line bg-surface p-4 shadow-card">
       <Skel className="mb-3 h-5 w-40" />
       <Skel className="h-[230px]" />
     </div>
@@ -94,7 +94,7 @@ type Kpi = { key: string; icon: LucideIcon; label: Pair; value: ReactNode; foot:
 
 function KpiCard({ k, loading }: { k: Kpi; loading: boolean }) {
   return (
-    <article data-testid={`kpi-${k.key}`} className="flex min-w-0 flex-col gap-2.5 rounded-card border border-line bg-surface p-3.5 @min-[760px]:p-[18px]">
+    <article data-testid={`kpi-${k.key}`} className="flex min-w-0 flex-col gap-2.5 rounded-card border border-line bg-surface shadow-card p-3.5 @min-[760px]:p-[18px]">
       <div className="flex items-start gap-2.5 text-sm font-semibold">
         <span
           data-testid={`kpi-${k.key}-icon`}
@@ -312,7 +312,7 @@ export default function Dashboard() {
             <Plus aria-hidden="true" className="size-5" />
             <span className="flex flex-wrap items-baseline gap-x-1.5">
               <span>{t.navNew.th}</span>
-              <span className="text-[12.5px] font-medium text-accent-ink/75">{t.navNew.en}</span>
+              <span className="text-[12.5px] font-medium text-accent-ink/90">{t.navNew.en}</span>
             </span>
           </Link>
         </Button>
@@ -387,7 +387,7 @@ export default function Dashboard() {
       {empty && (
         <section
           data-testid="dashboard-empty"
-          className="flex flex-col items-center gap-1.5 rounded-card border border-line bg-surface px-4 py-12 text-center"
+          className="flex flex-col items-center gap-1.5 rounded-card border border-line bg-surface shadow-card px-4 py-12 text-center"
         >
           <svg viewBox="0 0 150 90" aria-hidden="true" fill="none" strokeWidth="2" className="mb-2 h-[90px] w-[150px]">
             <path d="M10 80h130" className="stroke-line-2" />
@@ -404,7 +404,7 @@ export default function Dashboard() {
               <Plus aria-hidden="true" className="size-5" />
               <span className="flex flex-wrap items-baseline gap-x-1.5">
                 <span>{t.navNew.th}</span>
-                <span className="text-[12.5px] font-medium text-accent-ink/75">{t.navNew.en}</span>
+                <span className="text-[12.5px] font-medium text-accent-ink/90">{t.navNew.en}</span>
               </span>
             </Link>
           </Button>
@@ -412,7 +412,7 @@ export default function Dashboard() {
       )}
 
       {!error && (
-        <section aria-labelledby="rt-t" className="@container rounded-card border border-line bg-surface">
+        <section aria-labelledby="rt-t" className="@container rounded-card border border-line bg-surface shadow-card">
           <h2 id="rt-t" className="flex flex-col px-4 pt-4 pb-1 text-base leading-snug font-bold">
             <span>{t.recent10.th}</span>
             <En>{t.recent10.en}</En>

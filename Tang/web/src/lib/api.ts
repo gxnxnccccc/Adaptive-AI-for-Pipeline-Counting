@@ -2,7 +2,7 @@ import type { components } from './api-types'
 import type { CountsResponse } from './detection'
 import { bi, t } from './i18n'
 
-const base = () => import.meta.env.VITE_API_URL
+const base = () => import.meta.env.VITE_API_URL ?? '' // '' = same origin (nginx proxy in Docker)
 
 type Schemas = components['schemas']
 

@@ -1,6 +1,6 @@
 # Screen: Capture / Upload (Step 1 of 3)   Figma: https://www.figma.com/make/Fcwtli6ARlTTlMDXUnowlj/Steel-Pipe-Detector-UI-Design   Requirement: Demo item 1 (P3), 6 (P1), 7 (P5)
 
-> **Status: REFERENCE, not final design** (decision 2026-11-04). Take colors, buttons and cards from here; the real layout is designed in code, mobile-first, Thai + English, and must cover everything under MISSING IN FIGMA. No Figma update is needed first.
+> **Status: design for the WHOLE app (light look), decision 2026-11-10.** `docs/design/preview/capture-upload.html` is the source of truth for colors, cards and the Processing layout; Figma stays reference only. Plan: `docs/plans/light-ui-docker.md`.
 
 Source: Figma Make `src/app/components/Dashboard.tsx`, column 1 (route `/dashboard`). Desktop web only (`max-w-[1600px]`, `grid-cols-3`). The design shows **one image only**.
 

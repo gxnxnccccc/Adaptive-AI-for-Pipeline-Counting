@@ -2,7 +2,7 @@
 
 Owner: Tang (Phutiphum Thongin). Teammates: read freely, please don't edit, open an issue or ping Tang instead.
 
-**Status (4 Nov 2026):** working flow with a **mock detector** (the real model is not plugged in yet): mock login, upload several photos, detection result with boxes, confirm and submit, records list, dashboard. Visual design is not final. Storage in Supabase is written but not yet switched on (needs keys + SQL migrations), so Records and Dashboard show a "database not configured" error until then. See [docs/history.md](docs/history.md).
+**Status (10 Nov 2026):** the UI follows the light capture-upload design, the detector is still a **mock** (real model not plugged in), and a Docker demo runs the whole app with no keys. Supabase storage is written but only used when keys are set; otherwise the Docker demo keeps data in memory. See [docs/history.md](docs/history.md).
 
 | Folder | What |
 |---|---|
@@ -15,7 +15,18 @@ Owner: Tang (Phutiphum Thongin). Teammates: read freely, please don't edit, open
 | `docs/history.md` | What was done and what is next |
 | `docs/problem-log.md` | Problems for the final report |
 
-## Run it locally
+## Run with Docker (easiest)
+1. Install Docker Desktop and start it.
+2. ```bash
+   git clone https://github.com/gxnxnccccc/Adaptive-AI-for-Pipeline-Counting
+   cd Adaptive-AI-for-Pipeline-Counting/Tang
+   docker compose up --build
+   ```
+3. Open http://localhost:8080 and log in with any ID and password.
+
+Demo data is kept in memory only: it is lost when the containers restart. Stop with Ctrl+C or `docker compose down`. To use real Supabase instead, put the keys in `api/.env` and uncomment the `env_file` lines in `docker-compose.yml`.
+
+## Run it manually (no Docker)
 Needs Python 3.12 and Node 20+.
 
 API (terminal 1):

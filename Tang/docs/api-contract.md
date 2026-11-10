@@ -23,6 +23,8 @@ Response (proposed):
 ```
 
 ## Implemented (mock detector), 2026-11-04
+**Demo storage (2026-11-10):** with `DEMO_MEMORY=true` and no Supabase keys, the API keeps everything in one in-memory repo (single worker, lost on restart) instead of returning 503. `GET /health` returns `{"status":"ok","storage":"supabase"|"memory"|"none"}`.
+
 Storage = Supabase through `api/app/repo.py`. If `SUPABASE_URL` / `SUPABASE_SECRET_KEY` are missing or a placeholder, every endpoint below returns **503** `{"detail": "database not configured: ..."}` (`/health` still works). DB errors also return 503 `{"detail": "database error: <reason>"}`.
 
 ### POST /api/counts (multipart)

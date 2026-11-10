@@ -37,7 +37,7 @@ const C = {
 const MONO = 'var(--font-mono)'
 const H = 230
 const axisTick = { fill: C.tx3, fontSize: 12, fontFamily: MONO }
-const hoverBand = { fill: 'rgb(148 163 184 / 0.07)' }
+const hoverBand = { fill: 'rgb(31 41 55 / 0.06)' }
 
 const En = ({ children }: { children: ReactNode }) => <span className="text-xs font-normal text-tx-3">{children}</span>
 
@@ -51,7 +51,7 @@ function Card({ id, title, aside, legend, note, table, children }: {
   children: ReactNode
 }) {
   return (
-    <article aria-labelledby={`${id}-t`} className="flex min-w-0 flex-col rounded-card border border-line bg-surface">
+    <article aria-labelledby={`${id}-t`} className="flex min-w-0 flex-col rounded-card border border-line bg-surface shadow-card">
       <div className="flex items-start justify-between gap-2.5 px-4 pt-4 pb-1">
         <h2 id={`${id}-t`} className="flex flex-col text-base leading-snug font-bold">
           <span>{title.th}</span>
@@ -110,7 +110,7 @@ const Total = ({ id, value }: { id: string; value: string }) => (
 )
 
 const Tip = ({ children }: { children: ReactNode }) => (
-  <div className="rounded-lg border border-line-2 bg-bg px-2.5 py-2 text-[13px] leading-snug whitespace-nowrap text-tx shadow-[0_8px_24px_rgb(0_0_0/0.5)]">
+  <div className="rounded-lg border border-line-2 bg-surface px-2.5 py-2 text-[13px] leading-snug whitespace-nowrap text-tx shadow-pop">
     {children}
   </div>
 )
@@ -244,7 +244,7 @@ function RateLine({ points }: { points: DayPoint[] }) {
   )
 }
 
-// Dot plot: model = hollow cyan ring, actual = violet square, grey connector when they differ.
+// Dot plot: model = hollow blue ring, actual = violet square, grey connector when they differ.
 // The signed difference sits in a column on the right (design flag 8: 1-3 pipes vs ~100 look tiny).
 function ModelVsActual({ rows }: { rows: MvaRow[] }) {
   const animate = useAnimate()

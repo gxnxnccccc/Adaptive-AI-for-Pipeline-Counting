@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 // Variants follow the ui-v2 preview: .btn-primary / -secondary / -ghost / -danger.
-// Focus ring comes from the global :focus-visible rule (2 px cyan outline, 2 px offset).
+// Focus ring comes from the global :focus-visible rule (2 px blue outline, 2 px offset).
 const buttonVariants = cva(
   'inline-flex cursor-pointer items-center justify-center gap-2 rounded-control border border-transparent text-center text-[15px] leading-tight font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-45',
   {

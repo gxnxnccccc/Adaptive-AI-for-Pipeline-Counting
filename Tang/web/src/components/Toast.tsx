@@ -51,7 +51,7 @@ export default function Toast({ message, onClose }: Props) {
       {shown && (
         <div
           data-testid="saved-toast"
-          className="pointer-events-auto flex items-center gap-3 rounded-control border border-ok/55 bg-ok-surface py-3 pr-2 pl-3.5 shadow-[0_16px_40px_rgb(0_0_0/0.5)] animate-in fade-in slide-in-from-top-2"
+          className="pointer-events-auto flex items-center gap-3 rounded-control border border-ok/55 bg-ok-surface py-3 pr-2 pl-3.5 shadow-pop animate-in fade-in slide-in-from-top-2"
         >
           <CircleCheck aria-hidden="true" className="size-5 shrink-0 text-ok" />
           <p className="flex min-w-0 flex-1 flex-col font-semibold">

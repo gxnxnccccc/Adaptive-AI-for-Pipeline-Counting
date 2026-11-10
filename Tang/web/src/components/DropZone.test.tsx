@@ -19,7 +19,7 @@ describe('DropZone', () => {
   it('keeps both file inputs focusable (sr-only, not hidden) with the right attributes', () => {
     render(<DropZone onFiles={() => {}} />)
     const pick = screen.getByLabelText(/เลือกรูป/)
-    const cam = screen.getByLabelText(/เปิดกล้อง/)
+    const cam = screen.getByLabelText(/ถ่ายรูป/)
     for (const input of [pick, cam]) {
       expect(input).toHaveAttribute('type', 'file')
       expect(input).toHaveAttribute('accept', 'image/*')
@@ -52,8 +52,8 @@ describe('DropZone', () => {
       withCamera(() => new Promise(() => {}))
       const user = userEvent.setup()
       render(<DropZone onFiles={() => {}} />)
-      const open = screen.getByRole('button', { name: /Open camera/ })
-      expect(screen.queryByLabelText(/เปิดกล้อง/, { selector: 'input' })).not.toBeInTheDocument()
+      const open = screen.getByRole('button', { name: /Take photo/ })
+      expect(screen.queryByLabelText(/ถ่ายรูป/, { selector: 'input' })).not.toBeInTheDocument()
       await user.click(open)
       expect(screen.getByRole('dialog', { name: /Camera/ })).toBeInTheDocument()
       await user.keyboard('{Escape}')
@@ -66,7 +66,7 @@ describe('DropZone', () => {
       const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
       const user = userEvent.setup()
       render(<DropZone onFiles={() => {}} />)
-      await user.click(screen.getByRole('button', { name: /Open camera/ }))
+      await user.click(screen.getByRole('button', { name: /Take photo/ }))
       await user.click(await screen.findByRole('button', { name: /Choose photos instead/ }))
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       expect(click).toHaveBeenCalledOnce()

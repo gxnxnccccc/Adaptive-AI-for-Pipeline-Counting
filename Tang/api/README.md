@@ -10,4 +10,4 @@ FastAPI backend. Run: see [../README.md](../README.md).
 | `supabase/migrations/` | SQL files. Written, **not applied yet**. Never edit an applied file, add a new one |
 | `tests/` | pytest |
 
-Config in `api/.env` (gitignored, copy `.env.example`). Without Supabase keys the API still starts; storage endpoints return 503 "database not configured". Never commit `.env`; the secret key stays server-side only.
+Config in `api/.env` (gitignored, copy `.env.example`). Without Supabase keys the API still starts; storage endpoints return 503 "database not configured". Demo mode: `DEMO_MEMORY=true` with no keys = in-memory storage (single worker, lost on restart, no 503). `GET /health` shows `storage`: `supabase` / `memory` / `none`. Never commit `.env`; the secret key stays server-side only.

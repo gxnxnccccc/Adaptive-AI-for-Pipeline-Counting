@@ -35,6 +35,10 @@ Apps never talk to Supabase directly for writes. Everything goes through FastAPI
 | Mock detector | OpenCV `HoughCircles` in `api/app/detector.py` | real-ish circles from real photos = a working baseline; ML model replaces it later | random fake data |
 | Server compression | Pillow -> WebP (or AVIF), tuned quality | P5, measurable | JPEG re-encode |
 | Quality proof (P5) | SSIM + PSNR (scikit-image), original vs compressed | numbers for the report | visual check |
+| Docker Compose | `docker-compose.yml`: `api` + `web` services | a friend runs the whole demo with one command, no keys (API uses `DEMO_MEMORY`) | run uvicorn + npm by hand |
+| API image | `python:3.12-slim` + uvicorn :8000 | small, same Python as dev | full python image |
+| Web image | `node:20-alpine` build -> `nginx:1.27-alpine` | static bundle served by nginx, tiny final image | `vite preview` |
+| nginx proxy | serves the web on 8080, proxies `/api/` and `/health` to `api`, `client_max_body_size 160m` | same origin = no CORS; 10 x 15 MB uploads fit | CORS config |
 | Tests | Vitest + RTL (web), pytest + TestClient (API) | standard | Jest |
 
 ## 3. Supabase setup (draft, apply via migration in week 2-3)

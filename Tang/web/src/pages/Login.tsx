@@ -22,7 +22,7 @@ const Bi = ({ p, className }: { p: Pair; className?: string }) => (
 )
 
 const input =
-  'min-h-12 w-full rounded-control border border-line-2 bg-bg py-2.5 pr-3.5 pl-11 text-base text-tx transition-[border-color,box-shadow] hover:border-tx-3/60 focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none aria-invalid:border-err aria-invalid:ring-3 aria-invalid:ring-err/20'
+  'min-h-12 w-full rounded-control border border-line-2 bg-surface py-2.5 pr-3.5 pl-11 text-base text-tx transition-[border-color,box-shadow] hover:border-tx-3/60 focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none aria-invalid:border-err aria-invalid:ring-3 aria-invalid:ring-err/20'
 const fieldIcon = 'pointer-events-none absolute top-3.5 left-3.5 size-5 text-tx-3'
 const label = 'flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-semibold'
 
@@ -99,7 +99,7 @@ export default function Login() {
         <PipeArt />
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(2_6_23/.75)_0%,rgb(2_6_23/.1)_35%,rgb(2_6_23/.35)_70%,rgb(2_6_23/.95)_100%)] min-[900px]:bg-[linear-gradient(180deg,rgb(2_6_23/.8)_0%,rgb(2_6_23/.05)_30%,rgb(2_6_23/.25)_60%,rgb(2_6_23/.97)_100%)]"
+          className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(249_250_251/.92)_0%,rgb(249_250_251/.1)_35%,rgb(249_250_251/.55)_65%,rgb(249_250_251/.97)_100%)] min-[900px]:bg-[linear-gradient(180deg,rgb(249_250_251/.92)_0%,rgb(249_250_251/.05)_30%,rgb(249_250_251/.45)_58%,rgb(249_250_251/.98)_100%)]"
         />
         <span className="absolute top-7 right-7 z-[2] hidden min-h-[30px] items-center gap-1.5 rounded-full border border-line bg-raised px-2.5 py-0.5 text-[13px] font-semibold whitespace-nowrap min-[900px]:inline-flex">
           <span>{t.illustration.th}</span> <En className="text-xs">{t.illustration.en}</En>
@@ -128,7 +128,7 @@ export default function Login() {
       </section>
 
       <main className="flex flex-1 flex-col items-center justify-center gap-3.5 px-4 pt-5 pb-7">
-        <div className="flex w-full max-w-[440px] flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-[0_20px_50px_rgb(0_0_0/.45)] min-[900px]:p-7">
+        <div className="flex w-full max-w-[440px] flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-card min-[900px]:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h1 className="flex flex-col text-2xl leading-tight font-bold">
               <span>{t.login.th}</span> <span className="text-sm font-medium text-tx-3">{t.login.en}</span>
@@ -266,7 +266,7 @@ export default function Login() {
 
             <Button type="submit" size="lg" className="w-full">
               <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                <span>{t.login.th}</span> <span className="text-[12.5px] font-medium text-accent-ink/75">{t.login.en}</span>
+                <span>{t.login.th}</span> <span className="text-[12.5px] font-medium text-accent-ink/90">{t.login.en}</span>
               </span>
               <ArrowRight aria-hidden="true" className="size-5" />
             </Button>

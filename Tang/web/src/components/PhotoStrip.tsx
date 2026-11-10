@@ -36,9 +36,9 @@ export default function PhotoStrip({ photos, edits, urls, selectedId, onSelect }
                 aria-label={label}
                 data-testid="strip-thumb"
                 onClick={() => onSelect(p.id)}
-                className="flex w-[136px] flex-none cursor-pointer flex-col gap-1.5 rounded-control border border-line bg-bg p-1.5 text-left text-tx hover:border-line-2 aria-pressed:border-accent aria-pressed:shadow-[0_0_0_1px_var(--color-accent)]"
+                className="flex w-[136px] flex-none cursor-pointer flex-col gap-1.5 rounded-control border border-line bg-surface p-1.5 text-left text-tx hover:border-line-2 aria-pressed:border-accent aria-pressed:shadow-[0_0_0_1px_var(--color-accent)]"
               >
-                <span className="relative block aspect-[4/3] overflow-hidden rounded-md bg-[#0b0e12]">
+                <span className="relative block aspect-[4/3] overflow-hidden rounded-md bg-photo-bg">
                   {urls[p.id] && (
                     <PhotoViewer
                       src={urls[p.id]}
@@ -50,7 +50,7 @@ export default function PhotoStrip({ photos, edits, urls, selectedId, onSelect }
                       readOnly
                     />
                   )}
-                  {failed && <span aria-hidden="true" className="absolute inset-0 bg-[rgba(127,29,29,.5)]" />}
+                  {failed && <span aria-hidden="true" className="absolute inset-0 bg-err/40" />}
                   {edited && (
                     <span
                       data-testid="edited-badge"

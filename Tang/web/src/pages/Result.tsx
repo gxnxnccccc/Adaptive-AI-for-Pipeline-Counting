@@ -204,7 +204,7 @@ export default function Result() {
         <div
           data-testid="viewer"
           className={cn(
-            'relative mx-2 aspect-square touch-manipulation overflow-hidden rounded-control border border-line bg-black select-none sm:mx-4 sm:aspect-[4/3] sm:max-h-[620px]',
+            'relative mx-2 aspect-square touch-manipulation overflow-hidden rounded-control border border-line bg-photo-bg select-none sm:mx-4 sm:aspect-[4/3] sm:max-h-[620px]',
             locked && 'pointer-events-none',
           )}
         >

@@ -6,6 +6,20 @@ export const bi = (p: Pair) => `${p.th} · ${p.en}`
 
 export const t = {
   step1: { th: 'ถ่าย / อัปโหลดรูป', en: 'Capture / Upload' },
+  // Processing page, copied from docs/design/preview/capture-upload.html
+  takePhoto: { th: 'ถ่ายรูปด้วยกล้อง', en: 'Take photo' },
+  orWord: { th: 'หรือ', en: 'or' },
+  tapToChoose: { th: 'แตะเพื่อเลือกรูป (ได้หลายรูป)', en: 'Tap to choose photos, or drag and drop' },
+  limitLine: (n: number, max: number, mb: number): Pair => ({
+    th: `สูงสุด ${max} รูป รูปละไม่เกิน ${mb} MB`,
+    en: `Max ${max} photos, ${mb} MB each (${n}/${max})`,
+  }),
+  stWaiting: { th: 'รอส่ง', en: 'Queued' },
+  stSending: { th: 'กำลังส่ง…', en: 'Uploading…' },
+  darkNote: { th: 'ภาพมืดเกินไป ถ่ายใหม่ในที่สว่างขึ้น', en: 'Too dark, retake with more light' },
+  uploadN: (n: number): Pair => ({ th: `อัปโหลด ${n} รูป`, en: `Upload ${n}` }),
+  uploadingAll: { th: 'กำลังอัปโหลด…', en: 'Uploading…' },
+  reviewResults: { th: 'ตรวจผลลัพธ์', en: 'Review results' },
   failed: { th: 'ไม่สำเร็จ', en: 'Failed' },
   count: (n: number): Pair => ({ th: `พบ ${n} ท่อ`, en: `${n} pipes` }),
   remove: (name: string): Pair => ({ th: `ลบ ${name}`, en: `Remove ${name}` }),

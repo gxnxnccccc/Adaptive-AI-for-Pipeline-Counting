@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.repo import RepoUnavailable
+from app.repo import RepoUnavailable, storage_mode
 from app.routes.counts import router as counts_router
 from app.routes.stats import router as stats_router
 
@@ -38,4 +38,4 @@ def validation_error(request: Request, exc: RequestValidationError):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "storage": storage_mode()}

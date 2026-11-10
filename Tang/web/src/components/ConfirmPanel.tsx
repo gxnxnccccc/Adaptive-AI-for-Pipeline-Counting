@@ -33,7 +33,7 @@ const Bi = ({ p }: { p: Pair }) => (
 )
 const chip = 'inline-flex min-h-[30px] items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-semibold'
 const input =
-  'w-full min-h-12 rounded-control border border-line-2 bg-bg px-3.5 py-2.5 text-base text-tx transition-colors hover:border-tx-3/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(34_211_238/0.25)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-err aria-invalid:shadow-[0_0_0_3px_rgb(248_113_113/0.18)]'
+  'w-full min-h-12 rounded-control border border-line-2 bg-surface px-3.5 py-2.5 text-base text-tx transition-colors hover:border-tx-3/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(37_99_235/0.25)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-err aria-invalid:shadow-[0_0_0_3px_rgb(185_28_28/0.2)]'
 
 function CardTitle({ id, tag, title }: { id: string; tag: string; title: Pair }) {
   return (
@@ -86,7 +86,7 @@ function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<strin
             </b>
           </div>
           <ArrowRight aria-hidden="true" className="size-5 self-center text-tx-3" />
-          <div className={cn(cell, 'border-accent/55 bg-linear-to-b from-accent/10 to-bg/60')}>
+          <div className={cn(cell, 'border-accent/55 bg-linear-to-b from-accent/10 to-surface')}>
             <Bi p={t.correctedTotal} />
             <b data-testid="corrected-total" aria-live="polite" className={cn(big, 'text-accent')}>
               {tot.corrected}
@@ -389,7 +389,7 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
                 return (
                   <span className="flex flex-col leading-tight">
                     <span>{label.th}</span>
-                    <span className="text-[12.5px] font-medium text-accent-ink/75">{label.en}</span>
+                    <span className="text-[12.5px] font-medium text-accent-ink/90">{label.en}</span>
                   </span>
                 )
               })()}

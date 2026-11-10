@@ -1,34 +1,39 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* UI v2 "Dark control room" tokens. Values copied from docs/design/ui-v2.md + preview :root. */
+/* Light tokens copied from docs/design/preview/capture-upload.html (Tang, 2026-11-10: the whole app
+   follows that preview). Names stay the same so components keep working. */
 @theme {
-  --color-bg: #020617;
-  --color-surface: #0f172a;
-  --color-raised: #1e293b;
-  --color-line: #334155;
-  --color-line-2: #475569;
-  --color-tx: #f8fafc;
-  --color-tx-2: #cbd5e1;
-  --color-tx-3: #94a3b8;
-  --color-accent: #22d3ee;
-  --color-accent-hi: #67e8f9;
-  --color-accent-ink: #020617;
-  --color-ok: #4ade80;
-  --color-ok-surface: #052e1a; /* success toast background (preview .toast) */
-  --color-warn: #fbbf24;
-  --color-err: #f87171;
-  --color-photo-bg: #0b0e12; /* behind photos and the login illustration */
-  --color-err-hi: #fca5a5; /* error detail text on dark */
-  --color-viz-1: #0891b2;
-  --color-viz-2: #8b5cf6;
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-raised: #f3f4f6;
+  --color-line: #e5e7eb;
+  --color-line-2: #d1d5db;
+  --color-tx: #1f2937;
+  --color-tx-2: #4b5563;
+  --color-tx-3: #6b7280;
+  --color-accent: #2563eb;
+  --color-accent-hi: #1d4ed8;
+  --color-accent-ink: #ffffff;
+  --color-ok: #15803d;
+  --color-ok-surface: #dcfce7; /* success toast background */
+  --color-warn: #78350f;
+  --color-err: #b91c1c;
+  --color-photo-bg: #e5e7eb; /* behind photos */
+  --color-err-hi: #991b1b; /* error detail text */
+  --color-viz-1: #2563eb;
+  --color-viz-2: #7c3aed;
 
   --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   --radius-chip: 6px;
   --radius-control: 10px;
-  --radius-card: 14px;
+  --radius-card: 16px;
+
+  /* soft light shadows (preview .card: 0 4px 6px -1px rgba(0,0,0,.1)) */
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-pop: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* Shell switches sidebar <-> top bar + tab bar at 960 px (preview container query). */
   --breakpoint-desk: 60rem;
@@ -61,17 +66,11 @@
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
   body {
     background-color: var(--color-bg);
-    /* cyan glow top-left + faint 32 px grid */
-    background-image:
-      radial-gradient(1100px 480px at 0% -8%, rgb(34 211 238 / 0.07), transparent 60%),
-      linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px);
-    background-size: auto, 32px 32px, 32px 32px;
     color: var(--color-tx);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -82,7 +81,7 @@
     outline-offset: 2px;
   }
   ::placeholder {
-    color: #7f8ea3;
+    color: #9ca3af;
   }
 }
 
