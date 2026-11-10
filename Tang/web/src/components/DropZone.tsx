@@ -1,15 +1,29 @@
-import { useState, type ChangeEvent, type DragEvent } from 'react'
-import { Camera, Upload } from 'lucide-react'
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { Camera, Images, Upload } from 'lucide-react'
+import CameraModal, { canUseLiveCamera } from '@/components/CameraModal'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 type Props = { onFiles: (files: File[]) => void; disabled?: boolean }
 
-// Visible ring when the sr-only input inside the label has keyboard focus.
-const focusRing = 'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-600 has-[:focus-visible]:ring-offset-2'
+// Visible cyan outline when the sr-only input inside the label has keyboard focus (same as the global :focus-visible).
+const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent'
+const En = ({ children }: { children: string }) => <span className="text-[12.5px] font-normal text-tx-3">{children}</span>
 
 export default function DropZone({ onFiles, disabled = false }: Props) {
   const [dragging, setDragging] = useState(false)
+  const [camOpen, setCamOpen] = useState(false)
+  const pickRef = useRef<HTMLInputElement>(null)
+  const camLabel = (
+    <>
+      <Camera aria-hidden="true" className="size-5 shrink-0" />
+      <span className="flex flex-col leading-tight">
+        <span>{t.openCamera.th}</span>
+        <En>{t.openCamera.en}</En>
+      </span>
+    </>
+  )
 
   const take = (list: FileList | File[] | null | undefined) => {
     if (!disabled && list && list.length) onFiles(Array.from(list))
@@ -32,34 +46,7 @@ export default function DropZone({ onFiles, disabled = false }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Mobile first: on a phone the camera is the main action, so it comes first (same order in DOM and on screen). */}
-      <label
-        className={cn(
-          'flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gray-100 font-semibold text-gray-700 transition-colors hover:bg-gray-200',
-          focusRing,
-          disabled && 'pointer-events-none opacity-50',
-        )}
-      >
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          multiple
-          disabled={disabled}
-          onChange={onChange}
-          className="sr-only"
-        />
-        <Camera aria-hidden="true" className="size-5" />
-        {t.camera.th} · {t.camera.en}
-      </label>
-
-      <div className="flex items-center gap-2 text-sm text-gray-600" aria-hidden="true">
-        <span className="h-px flex-1 bg-gray-300" />
-        {t.or.th} / {t.or.en}
-        <span className="h-px flex-1 bg-gray-300" />
-      </div>
-
+    <div className="flex flex-col gap-3.5">
       <label
         data-testid="dropzone"
         data-dragging={String(dragging)}
@@ -67,18 +54,84 @@ export default function DropZone({ onFiles, disabled = false }: Props) {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={cn(
-          'flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-6 text-center transition-colors sm:p-10',
-          'hover:border-blue-500 hover:bg-blue-50',
+          'flex cursor-pointer flex-col items-center gap-1 rounded-card border-2 border-dashed border-line-2 bg-bg/50 px-4 py-6 text-center font-semibold transition-colors desk:py-11',
+          'hover:border-accent hover:bg-accent/12',
           focusRing,
-          dragging && 'border-blue-600 bg-blue-50',
+          dragging && 'border-accent bg-accent/12',
           disabled && 'pointer-events-none opacity-50',
         )}
       >
-        <input type="file" accept="image/*" multiple disabled={disabled} onChange={onChange} className="sr-only" />
-        <Upload aria-hidden="true" className="size-10 text-gray-400" />
-        <span className="font-medium text-gray-700">{t.pick.th}</span>
-        <span className="text-sm text-gray-600">{t.pick.en}</span>
+        <input ref={pickRef} type="file" accept="image/*" multiple disabled={disabled} onChange={onChange} className="sr-only" />
+        <span className="mb-1.5 grid size-14 place-items-center rounded-full border border-accent/35 bg-accent/12 text-accent">
+          <Upload aria-hidden="true" className="size-7" />
+        </span>
+        <span>{t.dropHint.th}</span>
+        <En>{t.dropHint.en}</En>
       </label>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {canUseLiveCamera() ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="whitespace-normal"
+            disabled={disabled}
+            onClick={() => setCamOpen(true)}
+          >
+            {camLabel}
+          </Button>
+        ) : (
+          // No getUserMedia (e.g. phone on plain http): the native camera picker instead.
+          <label
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'lg' }),
+              'whitespace-normal',
+              focusRing,
+              disabled && 'pointer-events-none opacity-45',
+            )}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              disabled={disabled}
+              onChange={onChange}
+              className="sr-only"
+            />
+            {camLabel}
+          </label>
+        )}
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          className="whitespace-normal"
+          disabled={disabled}
+          onClick={() => pickRef.current?.click()}
+        >
+          <Images aria-hidden="true" className="size-5 shrink-0" />
+          <span className="flex flex-col leading-tight">
+            <span>{t.choosePhotos.th}</span>
+            <En>{t.choosePhotos.en}</En>
+          </span>
+        </Button>
+      </div>
+
+      {camOpen && (
+        <CameraModal
+          onClose={() => setCamOpen(false)}
+          onShots={(files) => {
+            setCamOpen(false)
+            take(files)
+          }}
+          onPickInstead={() => {
+            setCamOpen(false)
+            pickRef.current?.click()
+          }}
+        />
+      )}
     </div>
   )
 }

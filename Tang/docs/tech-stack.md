@@ -22,6 +22,9 @@ Apps never talk to Supabase directly for writes. Everything goes through FastAPI
 |---|---|---|---|
 | UI design | **Figma** | wireframes -> hi-fi -> clickable prototype; team + professor can comment; specs for the coder | pen + paper |
 | Web | Vite + React + TypeScript + Tailwind | fast setup, phone-browser friendly, same React mindset as Guy's RN | Next.js |
+| Charts | `recharts@3.10.1` (lazy chunk) + `react-is@19.3.1` pin | Dashboard charts; recharts alone resolves react-is 17, broken on React 19 | hand-rolled SVG |
+| Fonts | `@fontsource` IBM Plex Sans Thai + JetBrains Mono | self-hosted, demo room may be offline | Google Fonts CDN |
+| Dialog / toast | hand-rolled ConfirmDialog + Toast | no shadcn AlertDialog / sonner deps for 2 small components | shadcn AlertDialog, sonner |
 | Web state/data | TanStack Query | upload status, retries, caching | fetch + useState |
 | Camera/upload | `<input type="file" accept="image/*" capture multiple>` | every phone browser, multi-image (P3) | `getUserMedia` (later, live guidance P1) |
 | Client compression | canvas -> WebP/JPEG resize before upload | smaller uploads on factory Wi-Fi (P5) | browser-image-compression |

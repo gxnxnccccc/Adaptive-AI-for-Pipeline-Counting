@@ -135,3 +135,134 @@ def test_confirm_bad_image_ids_422(client, repo, ids):
     bid = _upload(client)["batch_id"]
     assert client.post(f"/api/counts/{bid}/confirm", json={**GOOD, "image_ids": ids}).status_code == 422
     assert repo.batches[bid]["status"] == "draft"
+
+
+# ---- per-box corrections (training data): pipe index = position in images[i].pipes[] ----
+
+
+def _upload_two(client):
+    body = client.post(
+        "/api/counts",
+        files=files(("a.png", png_stack(3), "image/png"), ("b.png", png_stack(4), "image/png")),
+    ).json()
+    assert all(i["count"] >= 3 for i in body["images"])
+    return body
+
+
+def _image_row(repo, batch_id, position):
+    return next(i for i in repo.images if i["batch_id"] == batch_id and i["position"] == position)
+
+
+def _pipes(repo, image_row, source="model"):
+    rows = [p for p in repo.pipes if p["image_id"] == image_row["id"] and p["source"] == source]
+    return sorted(rows, key=lambda p: p["position"]) if source == "model" else rows
+
+
+def _confirm(client, bid, **extra):
+    return client.post(f"/api/counts/{bid}/confirm", json={**GOOD, **extra})
+
+
+def test_upload_stores_pipe_position_in_response_order(client, repo):
+    body = _upload_two(client)
+    for n, img in enumerate(body["images"], start=1):
+        stored = _pipes(repo, _image_row(repo, body["batch_id"], n))
+        assert [p["position"] for p in stored] == list(range(len(img["pipes"])))
+        assert [p["box"] for p in stored] == [p["box"] for p in img["pipes"]]
+
+
+def test_corrections_removed_marks_pipes_removed(client, repo):
+    body = _upload_two(client)
+    bid = body["batch_id"]
+    r = _confirm(client, bid, corrections=[{"image_id": "img_1", "removed": [0, 2]}])
+    assert r.status_code == 200
+    flags = [p["removed"] for p in _pipes(repo, _image_row(repo, bid, 1))]
+    assert flags[0] and flags[2] and not any(flags[1:2] + flags[3:])
+    assert not any(p["removed"] for p in _pipes(repo, _image_row(repo, bid, 2)))
+    # operator's number and model_total are not touched by corrections
+    rec = r.json()
+    assert rec["actual_amount"] == GOOD["actual_amount"]
+    assert rec["model_total"] == sum(i["count"] for i in body["images"])
+
+
+def test_corrections_added_inserts_user_added_pipes(client, repo):
+    body = _upload_two(client)
+    bid = body["batch_id"]
+    boxes = [[10, 20, 30, 30], [100.5, 50, 28.5, 29]]
+    r = _confirm(client, bid, corrections=[{"image_id": "img_2", "added": boxes}])
+    assert r.status_code == 200
+    added = _pipes(repo, _image_row(repo, bid, 2), source="user_added")
+    assert [p["box"] for p in added] == boxes
+    assert all(p["confidence"] is None and p["removed"] is False and p["position"] is None for p in added)
+    assert len(_pipes(repo, _image_row(repo, bid, 2))) == body["images"][1]["count"]  # model pipes untouched
+    assert r.json()["model_total"] == sum(i["count"] for i in body["images"])
+
+
+def test_corrections_mixed_across_images(client, repo):
+    body = _upload_two(client)
+    bid = body["batch_id"]
+    last = body["images"][1]["count"] - 1
+    r = _confirm(
+        client,
+        bid,
+        corrections=[
+            {"image_id": "img_1", "added": [[1, 1, 5, 5]], "removed": [1]},
+            {"image_id": "img_2", "removed": [0, last]},
+        ],
+    )
+    assert r.status_code == 200
+    img1, img2 = _image_row(repo, bid, 1), _image_row(repo, bid, 2)
+    assert [p["position"] for p in _pipes(repo, img1) if p["removed"]] == [1]
+    assert [p["box"] for p in _pipes(repo, img1, "user_added")] == [[1, 1, 5, 5]]
+    assert [p["position"] for p in _pipes(repo, img2) if p["removed"]] == [0, last]
+    assert _pipes(repo, img2, "user_added") == []
+
+
+def test_corrections_omitted_or_empty_changes_no_pipes(client, repo):
+    for extra in ({}, {"corrections": []}, {"corrections": [{"image_id": "img_1"}]}):
+        body = _upload_two(client)
+        assert _confirm(client, body["batch_id"], **extra).status_code == 200
+    assert not any(p["removed"] for p in repo.pipes)
+    assert all(p["source"] == "model" for p in repo.pipes)
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"corrections": [{"image_id": "img_9", "removed": [0]}]},  # unknown image
+        {"corrections": [{"image_id": "nope", "added": [[1, 1, 5, 5]]}]},  # not an img_<n> id
+        {"image_ids": ["img_2"], "corrections": [{"image_id": "img_1", "removed": [0]}]},  # photo not kept
+        {"corrections": [{"image_id": "img_1", "removed": [9999]}]},  # index out of range
+        {"corrections": [{"image_id": "img_1", "removed": [-1]}]},
+        {"corrections": [{"image_id": "img_1", "removed": [0, 0]}]},  # duplicate index
+        {"corrections": [{"image_id": "img_1", "added": [[1, 1, 0, 5]]}]},  # w <= 0
+        {"corrections": [{"image_id": "img_1", "added": [[1, 1, 5, -2]]}]},  # h <= 0
+        {"corrections": [{"image_id": "img_1", "added": [[1, 1, 5]]}]},  # not 4 numbers
+        {"corrections": [{"image_id": "img_1", "added": [[1, 1, 5, 5, 5]]}]},
+        {"corrections": [{"image_id": "img_1", "added": [[1, "a", 5, 5]]}]},
+        {"corrections": [{"image_id": "img_1", "removed": [0]}, {"image_id": "img_1", "removed": [1]}]},  # dup image
+        {"corrections": [{"image_id": "img_1", "added": [[1, 1, 5, 5]] * 501}]},  # too many adds
+    ],
+)
+def test_corrections_invalid_422_and_nothing_written(client, repo, extra):
+    bid = _upload_two(client)["batch_id"]
+    assert _confirm(client, bid, **extra).status_code == 422
+    assert repo.batches[bid]["status"] == "draft"
+    assert not any(p["removed"] for p in repo.pipes)
+    assert all(p["source"] == "model" for p in repo.pipes)
+    assert not any(i["excluded"] for i in repo.images)
+
+
+def test_corrections_index_equal_to_count_is_out_of_range(client, repo):
+    body = _upload_two(client)
+    n = body["images"][0]["count"]
+    r = _confirm(client, body["batch_id"], corrections=[{"image_id": "img_1", "removed": [n]}])
+    assert r.status_code == 422 and repo.batches[body["batch_id"]]["status"] == "draft"
+
+
+@pytest.mark.parametrize("bad", ["NaN", "Infinity", "-Infinity"])
+def test_corrections_non_finite_box_422(client, repo, bad):
+    bid = _upload_two(client)["batch_id"]
+    raw = '{"do_number": "DX1", "actual_amount": 1, "notes": "n", "corrections": [{"image_id": "img_1", "added": [[1, %s, 5, 5]]}]}'
+    r = client.post(f"/api/counts/{bid}/confirm", content=raw % bad, headers={"content-type": "application/json"})
+    assert r.status_code == 422
+    assert repo.batches[bid]["status"] == "draft" and all(p["source"] == "model" for p in repo.pipes)

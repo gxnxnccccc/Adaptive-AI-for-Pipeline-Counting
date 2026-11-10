@@ -5,7 +5,14 @@ from pydantic import BaseModel
 
 from app import detector
 from app.config import settings
-from app.repo import AlreadyConfirmed, InvalidImages, NotFound, Repo, get_repo
+from app.repo import (
+    AlreadyConfirmed,
+    InvalidCorrections,
+    InvalidImages,
+    NotFound,
+    Repo,
+    get_repo,
+)
 from app.schemas import BatchRecord, ConfirmRequest, CountsResponse, ImageResult
 
 router = APIRouter(prefix="/api")
@@ -77,11 +84,16 @@ def list_counts(
 @router.post("/counts/{batch_id}/confirm", response_model=BatchRecord)
 def confirm_counts(batch_id: str, body: ConfirmRequest, repo: RepoDep):
     try:
-        row = repo.confirm_batch(batch_id, body.do_number, body.actual_amount, body.notes, body.image_ids)
+        corrections = [c.model_dump() for c in body.corrections] if body.corrections else None
+        row = repo.confirm_batch(
+            batch_id, body.do_number, body.actual_amount, body.notes, body.image_ids, corrections
+        )
     except NotFound:
         raise HTTPException(404, "batch not found") from None
     except AlreadyConfirmed:
         raise HTTPException(409, "batch already confirmed") from None
     except InvalidImages:
         raise HTTPException(422, "image_ids must be a non-empty list of ids from this batch") from None
+    except InvalidCorrections as e:
+        raise HTTPException(422, f"invalid corrections: {e}") from None
     return BatchRecord.from_row(row)

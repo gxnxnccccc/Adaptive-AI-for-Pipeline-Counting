@@ -1,48 +1,98 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+/* UI v2 "Dark control room" tokens. Values copied from docs/design/ui-v2.md + preview :root. */
+@theme {
+  --color-bg: #020617;
+  --color-surface: #0f172a;
+  --color-raised: #1e293b;
+  --color-line: #334155;
+  --color-line-2: #475569;
+  --color-tx: #f8fafc;
+  --color-tx-2: #cbd5e1;
+  --color-tx-3: #94a3b8;
+  --color-accent: #22d3ee;
+  --color-accent-hi: #67e8f9;
+  --color-accent-ink: #020617;
+  --color-ok: #4ade80;
+  --color-ok-surface: #052e1a; /* success toast background (preview .toast) */
+  --color-warn: #fbbf24;
+  --color-err: #f87171;
+  --color-photo-bg: #0b0e12; /* behind photos and the login illustration */
+  --color-err-hi: #fca5a5; /* error detail text on dark */
+  --color-viz-1: #0891b2;
+  --color-viz-2: #8b5cf6;
+
+  --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --radius-chip: 6px;
+  --radius-control: 10px;
+  --radius-card: 14px;
+
+  /* Shell switches sidebar <-> top bar + tab bar at 960 px (preview container query). */
+  --breakpoint-desk: 60rem;
+
+  --animate-api-pulse: api-pulse 2s infinite;
+  @keyframes api-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0.6); }
+    70% { box-shadow: 0 0 0 7px rgb(74 222 128 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0); }
+  }
+
+  /* Processing: scan line over detecting thumbnails + indeterminate bar (preview .scan / .pbar.ind) */
+  --animate-scan: scan 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  @keyframes scan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(340%); }
+  }
+  --animate-ind: ind 1.2s ease-in-out infinite;
+  @keyframes ind {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(300%); }
+  }
+  /* done banner: bar fills while waiting to open Result (duration set inline) */
+  --animate-fill: fill linear forwards;
+  @keyframes fill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-bg);
+    /* cyan glow top-left + faint 32 px grid */
+    background-image:
+      radial-gradient(1100px 480px at 0% -8%, rgb(34 211 238 / 0.07), transparent 60%),
+      linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+    color: var(--color-tx);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  ::placeholder {
+    color: #7f8ea3;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
