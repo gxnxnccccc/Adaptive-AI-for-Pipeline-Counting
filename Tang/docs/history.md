@@ -8,7 +8,9 @@ Short update log so any session can continue. Details live in plans, decisions, 
 - New brand theme (deep blue / white / pink) + fonts Mitr / Anuphan / Spline Sans Mono across the app.
 - Login redesigned: "RAI" morphs into the 5-member crew; they lean in while typing, turn away when the password is shown, shake their heads on a wrong password. Spec: `docs/design/login-crew.md`.
 - Mock login password = `spds`. Demo bundle rebuilt. Checks: web tsc + eslint + 198 vitest, api 99 pytest.
+- `SPDS.exe` fix: `demo/build-exe.bat` + `spds_launcher.py` (rule added to CLAUDE.md).
 **Open**
+- Tang: run `demo/build-exe.bat` once on Windows to replace the old Desktop exe.
 - Tang to confirm fonts + demo password. Dashboard day-over-day deltas (needs API field) -> backlog.
 
 ## 2026-11-10 (Tue)

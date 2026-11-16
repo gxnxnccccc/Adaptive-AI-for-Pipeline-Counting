@@ -42,6 +42,7 @@ Where updates go:
 | Requirement finished (reviewer PASS) | tick it in `docs/requirements.md` |
 | ML team answered a question | `docs/api-contract.md` (OPEN -> CONFIRMED) |
 | Stack changed | `docs/tech-stack.md` + a line in `decisions.md` |
+| Anything in `web/src` or `api/app` changed | `cd web && npm run build:demo` (refreshes `demo/site`), commit it, then tell Tang: "run `demo/build-exe.bat` to refresh `SPDS.exe`" |
 
 ## 3. Git rules (team repo, branch + PR)
 Start of every block:
@@ -78,6 +79,7 @@ You never write app code yourself. Route every task:
 
 - FAIL -> exact failure list back to `coder`. Max 3 loops, then stop and ask Tang.
 - Done = tester PASS + reviewer PASS + scribe logged it.
+- **Demo bundle rule:** a UI/API task is not done until `demo/site` is rebuilt AND the final message reminds Tang to rerun `demo/build-exe.bat`. `SPDS.exe` on his Desktop is a frozen copy: it never updates itself, and Claude cannot build a Windows exe from the cloud.
 - Unknown from ML team -> OPEN in `docs/api-contract.md`, code behind the adapter, ask Tang. Never guess.
 - Before 30 Nov: only "Demo scope" items in `docs/requirements.md`. Everything else -> backlog.
 
