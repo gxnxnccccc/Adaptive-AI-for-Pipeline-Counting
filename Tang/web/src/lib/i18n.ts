@@ -140,6 +140,11 @@ export const t = {
     en: 'Charts appear after the first confirmed detection.',
   },
   recent10: { th: 'รายการล่าสุด 10 รายการ', en: 'Recent 10' },
+  exportCsv: { th: 'ดาวน์โหลด CSV', en: 'Export CSV' },
+  exportCsvHint: { th: 'สูงสุด 100 รายการล่าสุด', en: 'Up to the latest 100 batches' },
+  exportCsvFailed: { th: 'ดาวน์โหลด CSV ไม่สำเร็จ', en: 'CSV export failed' },
+  capsLockOn: { th: 'Caps Lock เปิดอยู่', en: 'Caps Lock is on' },
+  onlyToCheck: { th: 'ดูเฉพาะ', en: 'show only' },
   colModel: { th: 'โมเดล', en: 'Model' },
   // Processing v2 (ui-v2 task 6a)
   dropHint: { th: 'ลากรูปมาวาง หรือแตะเพื่อเลือกรูป', en: 'Drag photos here or tap to choose (several at once)' },

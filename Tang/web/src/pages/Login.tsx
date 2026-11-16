@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import { ArrowRight, CircleAlert, Eye, EyeOff, Lock, RefreshCw, TriangleAlert, User } from 'lucide-react'
+import { ArrowBigUpDash, ArrowRight, CircleAlert, Eye, EyeOff, Lock, RefreshCw, TriangleAlert, User } from 'lucide-react'
 import ApiChip, { useApiStatus, type ApiStatus } from '@/components/ApiChip'
 import BrandMark from '@/components/BrandMark'
 import LoginCrew, { type CrewMood } from '@/components/LoginCrew'
@@ -49,6 +49,8 @@ export default function Login() {
   const [keep, setKeep] = useState(true)
   const [errors, setErrors] = useState({ id: false, pw: false })
   const [pwWrong, setPwWrong] = useState(false)
+  // Caps Lock on while typing the password (only browsers report it on key/mouse events, so it starts false).
+  const [caps, setCaps] = useState(false)
   // Crew: which field has focus, and a short "wrong" mood after each bad password.
   const [focus, setFocus] = useState<'id' | 'pw' | null>(null)
   const [wrongKey, setWrongKey] = useState(0)
@@ -222,10 +224,19 @@ export default function Login() {
                     setPwWrong(false)
                   }}
                   onFocus={() => setFocus('pw')}
-                  onBlur={() => setFocus(null)}
+                  onBlur={() => {
+                    setFocus(null)
+                    setCaps(false)
+                  }}
+                  onKeyDown={(e) => setCaps(e.getModifierState?.('CapsLock') ?? false)}
+                  onKeyUp={(e) => setCaps(e.getModifierState?.('CapsLock') ?? false)}
+                  onMouseDown={(e) => setCaps(e.getModifierState?.('CapsLock') ?? false)}
                   autoComplete="current-password"
                   aria-invalid={errors.pw || pwWrong || undefined}
-                  aria-describedby={errors.pw ? 'login-pw-err' : pwWrong ? 'login-pw-wrong' : undefined}
+                  aria-describedby={
+                    [errors.pw ? 'login-pw-err' : pwWrong ? 'login-pw-wrong' : '', caps ? 'login-pw-caps' : ''].filter(Boolean).join(' ') ||
+                    undefined
+                  }
                 />
                 <Button
                   type="button"
@@ -238,6 +249,15 @@ export default function Login() {
                 >
                   {show ? <EyeOff aria-hidden="true" className="size-5" /> : <Eye aria-hidden="true" className="size-5" />}
                 </Button>
+              </div>
+              <div aria-live="polite" className="empty:-mt-1.5">
+                {caps && (
+                  <p id="login-pw-caps" data-testid="caps-lock" className="flex items-center gap-1.5 text-sm font-semibold text-warn">
+                    <ArrowBigUpDash aria-hidden="true" className="size-4 shrink-0" />
+                    <span>{t.capsLockOn.th}</span>
+                    <span className="text-[12.5px] font-medium opacity-85">{t.capsLockOn.en}</span>
+                  </p>
+                )}
               </div>
               {errors.pw && <FieldError id="login-pw-err" p={t.pwRequired} />}
               {pwWrong && (

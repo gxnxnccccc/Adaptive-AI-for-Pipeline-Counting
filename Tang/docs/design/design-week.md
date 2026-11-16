@@ -15,7 +15,7 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 
 | Function to add | When |
 |---|---|
-| Caps Lock warning under the password | Demo |
+| Caps Lock warning under the password | Demo ✅ built |
 | Crew waves / jumps once on a correct login | Demo |
 | Real sign-in (Supabase Auth) instead of `spds` | Later |
 | Forgot-password flow | Later |
@@ -37,7 +37,7 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 ## 03 Result
 | What to fix |
 |---|
-| 18 low-confidence boxes all dashed orange = noisy: "show only boxes to check" + "next box" |
+| 18 low-confidence boxes all dashed orange = noisy: "show only boxes to check" ✅ built (tap the to-check chip) + "next box" (Later) |
 | Thumbnail strip shows "pipes" twice: add the photo number |
 | Two red buttons (Remove photo, Cancel detection) compete with Submit: Cancel as a quiet text link |
 
@@ -59,8 +59,8 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 | Function to add | When |
 |---|---|
 | Click a recent row to open that batch | Demo |
-| Export recent batches as CSV | Demo |
+| Export recent batches as CSV | Demo ✅ built |
 | Filter by date / operator | Later |
 | Model accuracy over time | Later |
 
-Demo items total: 9. Tang picks which ones fit before 30 Nov (about 1.5 h/day); the rest move to Later.
+Tang picked 3 Demo items (2026-11-16): Caps Lock, show only boxes to check, Export CSV. The other Demo items move to Later unless time is left.

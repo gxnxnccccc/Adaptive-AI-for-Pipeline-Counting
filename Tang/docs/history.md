@@ -9,6 +9,8 @@ Short update log so any session can continue. Details live in plans, decisions, 
 - Login redesigned: "RAI" morphs into the 5-member crew; they lean in while typing, turn away when the password is shown, shake their heads on a wrong password. Spec: `docs/design/login-crew.md`.
 - Mock login password = `spds`. Demo bundle rebuilt. Checks: web tsc + eslint + 198 vitest, api 99 pytest.
 - `SPDS.exe` fix: `demo/build-exe.bat` + `spds_launcher.py` (rule added to CLAUDE.md).
+- Design week: 4 hi-fi frames + Fix / Demo / Later notes (`docs/design/design-week.md`). Figma upload from the cloud was blocked (problem-log).
+- 3 Demo items from design week built: Caps Lock warning (Login), "show only boxes to check" toggle on the to-check chip (Result, confident boxes fade), Export CSV of the latest 100 batches (Dashboard). Checks: tsc + eslint + 208 vitest; checked in the browser.
 **Open**
 - Tang: switch his repo folder to the branch once, then run `demo/build-live-exe.bat` once; after that reopening SPDS.exe updates it.
 - Tang to confirm fonts + demo password. Dashboard day-over-day deltas (needs API field) -> backlog.

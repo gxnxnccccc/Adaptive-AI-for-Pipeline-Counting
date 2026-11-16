@@ -44,6 +44,9 @@ type Props = {
   onPick?: (point: Point) => void
   // Thumbnails and the locked (submitting) state: no picking, thinner strokes.
   readOnly?: boolean
+  // "Show only boxes to check": confident boxes fade out (still there and still tappable), so the
+  // low-confidence ones stand out. Faded, not hidden, so a tap never hits a box you can't see.
+  focusLow?: boolean
 }
 
 const BASE = 'box fill-transparent [vector-effect:non-scaling-stroke]'
@@ -67,6 +70,7 @@ export default function PhotoViewer({
   label,
   onPick,
   readOnly = false,
+  focusLow = false,
 }: Props) {
   const vb = viewBoxFor(view, cropBox, width, height)
   const removed = new Set(edits?.removed)
@@ -93,7 +97,7 @@ export default function PhotoViewer({
       {pipes.map((p, i) => {
         const { x, y, w, h } = toRect(p.box)
         const isRemoved = removed.has(i)
-        const style = isRemoved ? STYLE.removed : p.lowConfidence ? STYLE.low : STYLE.ok
+        const style = isRemoved ? STYLE.removed : p.lowConfidence ? STYLE.low : focusLow ? `${STYLE.ok} box-faded opacity-20` : STYLE.ok
         return (
           <g key={i}>
             <rect x={x} y={y} width={w} height={h} rx={4} strokeWidth={stroke} className={`${BASE} ${style} ${hover}`} />

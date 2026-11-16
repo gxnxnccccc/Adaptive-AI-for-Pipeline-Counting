@@ -4,6 +4,10 @@ import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import Dashboard from './Dashboard'
 
+// Export CSV: catch the file instead of letting jsdom try to download it.
+const saved = vi.hoisted(() => ({ files: [] as { blob: Blob; name: string }[] }))
+vi.mock('@/lib/annotate', () => ({ downloadBlob: (blob: Blob, name: string) => saved.files.push({ blob, name }) }))
+
 // The real lib/api runs; only the network is faked (API field names on the wire).
 const wire = (detections: number, confirmed: number, rate: number | null, failed: number) => ({
   detections_today: detections,
@@ -97,7 +101,10 @@ const renderIt = () =>
     </MemoryRouter>,
   )
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  saved.files.length = 0
+})
 
 describe('Dashboard', () => {
   it('loaded: 4 KPI values, rate as a percent, updated time, Recent 10 rows', async () => {
@@ -285,6 +292,42 @@ describe('Dashboard', () => {
       expect(await screen.findByTestId('table-detections')).toBeInTheDocument()
       expect(screen.queryByTestId('charts-error')).not.toBeInTheDocument()
       expect(screen.getByTestId('kpi-today-value')).toHaveTextContent('12')
+    })
+  })
+
+  describe('Export CSV', () => {
+    it('fetches the latest 100 and saves them as a CSV with a header', async () => {
+      const user = userEvent.setup()
+      const f = stubApi({ stats: wire(3, 2, 0.5, 0), items: THREE })
+      renderIt()
+      await user.click(await screen.findByTestId('export-csv'))
+      await waitFor(() => expect(saved.files).toHaveLength(1))
+      expect(f.mock.calls.some(([u]) => String(u).includes('/api/counts?limit=100&offset=0'))).toBe(true)
+      const { blob, name } = saved.files[0]
+      expect(name).toMatch(/^spds-batches-\d{4}-\d\d-\d\d\.csv$/)
+      const lines = (await blob.text()).replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+      expect(lines[0]).toMatch(/^batch_id,created_at,operator_id,do_number,status/)
+      expect(lines).toHaveLength(4)
+      expect(lines[2]).toMatch(/^b2,.*,OP-07,DX2,confirmed,2,120,122,2,true,/)
+    })
+
+    it('is hidden when there are no records', async () => {
+      stubApi({ stats: wire(0, 0, null, 0), items: [] })
+      renderIt()
+      expect(await screen.findByTestId('dashboard-empty')).toBeInTheDocument()
+      expect(screen.queryByTestId('export-csv')).not.toBeInTheDocument()
+    })
+
+    it('shows an error when the fetch fails and saves nothing', async () => {
+      const user = userEvent.setup()
+      const api: Api = { stats: wire(3, 2, 0.5, 0), items: THREE }
+      stubApi(api)
+      renderIt()
+      const btn = await screen.findByTestId('export-csv')
+      api.status = 503
+      await user.click(btn)
+      expect(await screen.findByTestId('export-csv-error')).toHaveTextContent('database not configured')
+      expect(saved.files).toHaveLength(0)
     })
   })
 })
