@@ -10,6 +10,11 @@ Data lives in memory and is lost on restart. The detector is a mock.
 
 `site/` is the built web app (rebuilt by Tang with `npm run build:demo` in `web/`). Don't edit it by hand.
 
-## SPDS.exe (single-file app, Windows)
-`SPDS.exe` is a **frozen copy** of `site/` + the API made at build time, so it stays old until rebuilt.
-After any change to `web/` or `api/`: double-click **build-exe.bat** (needs Python 3.12+ and Node 20+; ~2 min). It rebuilds the web app, packages `demo/dist/SPDS.exe` and copies it to your Desktop. Close a running SPDS.exe first. Run from source instead with `spds_launcher.py`.
+## SPDS.exe = live launcher (Tang's PC)
+`SPDS-live.bat` / `SPDS.exe` (from `spds_live.py`) runs THIS repo folder: on every start it pulls the latest code (`git pull --ff-only`), installs changed packages, starts the API + web in live mode and opens the browser by itself.
+- Build the exe **once**: double-click `build-live-exe.bat` (needs git, Python 3.12+, Node 20+). It replaces `Desktop\SPDS.exe`.
+- After that, new code = just close and reopen `SPDS.exe`. Rebuild only if `spds_live.py` itself changed.
+- If it says "Could not update automatically", you have local edits or the branch moved: commit/stash them, then reopen.
+
+## Frozen bundle (friends without git/Node)
+`build-exe.bat` packs `site/` + the API into one exe. It is a snapshot: rebuild it after changes.

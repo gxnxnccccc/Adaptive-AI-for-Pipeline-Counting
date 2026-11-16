@@ -10,7 +10,7 @@ Short update log so any session can continue. Details live in plans, decisions, 
 - Mock login password = `spds`. Demo bundle rebuilt. Checks: web tsc + eslint + 198 vitest, api 99 pytest.
 - `SPDS.exe` fix: `demo/build-exe.bat` + `spds_launcher.py` (rule added to CLAUDE.md).
 **Open**
-- Tang: run `demo/build-exe.bat` once on Windows to replace the old Desktop exe.
+- Tang: switch his repo folder to the branch once, then run `demo/build-live-exe.bat` once; after that reopening SPDS.exe updates it.
 - Tang to confirm fonts + demo password. Dashboard day-over-day deltas (needs API field) -> backlog.
 
 ## 2026-11-10 (Tue)

@@ -13,3 +13,4 @@ uploads/
 demo/dist/
 demo/build/
 *.exe
+demo/.live-stamps.json

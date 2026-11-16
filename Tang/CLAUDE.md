@@ -42,7 +42,7 @@ Where updates go:
 | Requirement finished (reviewer PASS) | tick it in `docs/requirements.md` |
 | ML team answered a question | `docs/api-contract.md` (OPEN -> CONFIRMED) |
 | Stack changed | `docs/tech-stack.md` + a line in `decisions.md` |
-| Anything in `web/src` or `api/app` changed | `cd web && npm run build:demo` (refreshes `demo/site`), commit it, then tell Tang: "run `demo/build-exe.bat` to refresh `SPDS.exe`" |
+| Anything in `web/src`, `web/package*.json`, `api/app` or `api/requirements.txt` changed | `cd web && npm run build:demo` (refreshes `demo/site` for the no-Node bundle), commit + push, then tell Tang: "close and reopen `SPDS.exe`, it pulls the new code itself" |
 
 ## 3. Git rules (team repo, branch + PR)
 Start of every block:
@@ -79,7 +79,7 @@ You never write app code yourself. Route every task:
 
 - FAIL -> exact failure list back to `coder`. Max 3 loops, then stop and ask Tang.
 - Done = tester PASS + reviewer PASS + scribe logged it.
-- **Demo bundle rule:** a UI/API task is not done until `demo/site` is rebuilt AND the final message reminds Tang to rerun `demo/build-exe.bat`. `SPDS.exe` on his Desktop is a frozen copy: it never updates itself, and Claude cannot build a Windows exe from the cloud.
+- **SPDS.exe rule:** Tang's Desktop `SPDS.exe` = the LIVE launcher (`demo/spds_live.py`, built once with `demo/build-live-exe.bat`). Every start it runs `git pull --ff-only` on the branch his repo folder is on, installs changed npm/pip packages, starts API + Vite and opens the browser. So: a UI/API task is not done until it is committed + pushed to the branch Tang's folder tracks, `demo/site` is rebuilt, and the final message says "reopen SPDS.exe". If you changed `spds_live.py` itself, tell him to rerun `build-live-exe.bat` once. Claude cannot build or run the Windows exe from the cloud. (`demo/build-exe.bat` = separate frozen bundle for friends without git/Node; it does not update itself.)
 - Unknown from ML team -> OPEN in `docs/api-contract.md`, code behind the adapter, ask Tang. Never guess.
 - Before 30 Nov: only "Demo scope" items in `docs/requirements.md`. Everything else -> backlog.
 
