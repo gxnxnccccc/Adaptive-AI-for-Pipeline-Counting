@@ -38,7 +38,7 @@ beforeEach(() => {
 
 async function signIn(user: ReturnType<typeof userEvent.setup>) {
   await user.type(idField(), 'OP-7')
-  await user.type(pwField(), 'x')
+  await user.type(pwField(), 'spds')
   await user.click(screen.getByRole('button', { name: /เข้าสู่ระบบ/ }))
 }
 
@@ -87,7 +87,7 @@ describe('routes + auth', () => {
 
   it('shows the demo-login note', () => {
     renderAt('/login')
-    expect(screen.getByText(/Demo login only/)).toBeInTheDocument()
+    expect(screen.getByText(/Demo login, not real security/)).toBeInTheDocument()
   })
 
   it('logout returns to /login', async () => {

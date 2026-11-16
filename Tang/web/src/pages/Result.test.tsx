@@ -260,21 +260,25 @@ describe('Result panel: totals + confirm (8c)', () => {
     expect(per).toHaveTextContent(/f\.jpg— ล้มเหลว/)
   })
 
-  it('submit is disabled until DO, actual and notes are valid; the helper says what is missing', async () => {
+  it('submit says what is missing above the button; tapping it shows the errors and focuses the first bad field', async () => {
     const { user } = await openResult()
-    expect(submitBtn()).toBeDisabled()
+    expect(submitBtn()).toBeEnabled()
     expect(screen.getByText(/Fill in DO number, Notes to submit/)).toBeInTheDocument()
+    await user.click(submitBtn())
+    expect(screen.getByLabelText(/DO number/)).toHaveFocus()
+    expect(screen.getByText(/DO number is required/)).toBeInTheDocument()
+    expect(screen.getByText(/Notes are required/)).toBeInTheDocument()
     await user.type(screen.getByLabelText(/DO number/), 'DX1')
     expect(screen.getByText(/Fill in Notes to submit/)).toBeInTheDocument()
     await user.type(screen.getByLabelText(/Notes/), 'ok')
-    expect(submitBtn()).toBeEnabled()
+    expect(screen.queryByText(/to submit/)).not.toBeInTheDocument()
     expect(screen.getByTestId('notes-count')).toHaveTextContent('2/2000')
     await user.clear(actualInput())
-    expect(submitBtn()).toBeDisabled()
     await user.type(actualInput(), '-1')
     expect(actualInput()).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText(/Whole number, 0 or more/)).toBeInTheDocument()
-    expect(submitBtn()).toBeDisabled()
+    await user.click(submitBtn())
+    expect(actualInput()).toHaveFocus()
   })
 
   it('DO / notes errors show after leaving the field empty (whitespace does not count)', async () => {

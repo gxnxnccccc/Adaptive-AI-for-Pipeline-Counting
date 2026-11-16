@@ -3,14 +3,15 @@ import { Navigate, useNavigate } from 'react-router'
 import { ArrowRight, CircleAlert, Eye, EyeOff, Lock, RefreshCw, TriangleAlert, User } from 'lucide-react'
 import ApiChip, { useApiStatus, type ApiStatus } from '@/components/ApiChip'
 import BrandMark from '@/components/BrandMark'
-import PipeArt from '@/components/PipeArt'
+import LoginCrew, { type CrewMood } from '@/components/LoginCrew'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/auth'
+import { DEMO_PASSWORD, useAuth } from '@/lib/auth'
 import { bi, t, type Pair } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
-// Layout + states from docs/design/preview/login.html (default, empty fields, checking, API offline).
-// Login is the MOCK from lib/auth.tsx (any non-empty ID + password); the card says so.
+// Left half: LoginCrew (docs/design/login-crew.md). Right half: the sign-in card
+// (states: default, empty fields, wrong password, checking, API offline).
+// Login is the MOCK from lib/auth.tsx (any non-empty ID + DEMO_PASSWORD); the card says so.
 
 const En = ({ children, className }: { children: ReactNode; className?: string }) => (
   <span className={cn('text-[12.5px] font-normal tracking-[.01em] text-tx-3', className)}>{children}</span>
@@ -37,13 +38,6 @@ function FieldError({ id, p }: { id: string; p: Pair }) {
   )
 }
 
-function Brand() {
-  return (
-    <div className="flex min-h-11 items-center gap-2.5">
-      <BrandMark />
-    </div>
-  )
-}
 
 export default function Login() {
   const { operator, login } = useAuth()
@@ -54,6 +48,18 @@ export default function Login() {
   const [show, setShow] = useState(false)
   const [keep, setKeep] = useState(true)
   const [errors, setErrors] = useState({ id: false, pw: false })
+  const [pwWrong, setPwWrong] = useState(false)
+  // Crew: which field has focus, and a short "wrong" mood after each bad password.
+  const [focus, setFocus] = useState<'id' | 'pw' | null>(null)
+  const [wrongKey, setWrongKey] = useState(0)
+  const [crewWrong, setCrewWrong] = useState(false)
+  useEffect(() => {
+    if (!wrongKey) return
+    const timer = setTimeout(() => setCrewWrong(false), 1400)
+    return () => clearTimeout(timer)
+  }, [wrongKey])
+  const mood: CrewMood = crewWrong ? 'wrong' : show ? 'away' : focus ? 'watch' : 'idle'
+  const look = Math.min(1, (focus === 'pw' ? pw.length : id.length) / 16)
   const idRef = useRef<HTMLInputElement>(null)
   const pwRef = useRef<HTMLInputElement>(null)
 
@@ -83,62 +89,54 @@ export default function Login() {
       return
     }
     // Sign-in is allowed while the API is offline (Tang 2026-11-09); the warning above says detection won't work.
-    if (login(id, pw, keep)) navigate('/processing', { replace: true })
+    if (login(id, pw, keep)) {
+      navigate('/processing', { replace: true })
+      return
+    }
+    setPwWrong(true)
+    setCrewWrong(true)
+    setWrongKey((k) => k + 1)
+    pwRef.current?.select()
+    pwRef.current?.focus()
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1.15fr)_minmax(460px,.85fr)]">
-      <div className="absolute top-3.5 left-4 z-[3] min-[900px]:top-6 min-[900px]:left-7">
-        <Brand />
-      </div>
-
+    <div className="relative flex min-h-dvh flex-col min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1.1fr)_minmax(460px,.9fr)]">
       <section
-        aria-label={bi(t.illustrationLabel)}
-        className="relative h-[210px] overflow-hidden border-b border-line bg-photo-bg min-[900px]:h-auto min-[900px]:border-r min-[900px]:border-b-0"
+        aria-label={bi(t.crewLabel)}
+        className="relative flex flex-col gap-3 overflow-hidden bg-accent px-4 pt-4 text-accent-ink min-[900px]:gap-6 min-[900px]:px-10 min-[900px]:pt-8"
       >
-        <PipeArt />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(249_250_251/.92)_0%,rgb(249_250_251/.1)_35%,rgb(249_250_251/.55)_65%,rgb(249_250_251/.97)_100%)] min-[900px]:bg-[linear-gradient(180deg,rgb(249_250_251/.92)_0%,rgb(249_250_251/.05)_30%,rgb(249_250_251/.45)_58%,rgb(249_250_251/.98)_100%)]"
-        />
-        <span className="absolute top-7 right-7 z-[2] hidden min-h-[30px] items-center gap-1.5 rounded-full border border-line bg-raised px-2.5 py-0.5 text-[13px] font-semibold whitespace-nowrap min-[900px]:inline-flex">
-          <span>{t.illustration.th}</span> <En className="text-xs">{t.illustration.en}</En>
-        </span>
-        <div className="absolute inset-x-4 bottom-3.5 z-[2] flex flex-col gap-2.5 min-[900px]:inset-x-8 min-[900px]:bottom-8 min-[900px]:gap-4">
-          <p className="flex flex-col text-xl leading-tight font-bold min-[900px]:text-[34px]">
-            <span>{t.tagline.th}</span>{' '}
-            <span className="text-[13px] font-normal text-tx-2 min-[900px]:text-base min-[900px]:font-medium">{t.tagline.en}</span>
-          </p>
-          <ol className="m-0 hidden list-none flex-wrap gap-2 p-0 min-[900px]:flex">
-            {t.loginSteps.map((s, i) => (
-              <li
-                key={s.en}
-                className="flex items-center gap-2 rounded-full border border-line bg-surface/85 py-1.5 pr-3 pl-1.5 text-sm font-semibold"
-              >
-                <span className="grid size-[26px] place-items-center rounded-full border border-accent/40 bg-accent/12 font-mono text-[13px] text-accent">
-                  {i + 1}
-                </span>
-                <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                  <span>{s.th}</span> <En>{s.en}</En>
-                </span>
-              </li>
-            ))}
-          </ol>
+        <div className="flex min-h-11 items-center gap-2.5">
+          <BrandMark onDark withSub={false} />
+        </div>
+        <p className="flex flex-col gap-1 font-display text-[22px] leading-tight font-medium min-[900px]:max-w-[16ch] min-[900px]:text-[44px]">
+          <span>{t.tagline.th}</span>
+          <span className="font-sans text-[13px] font-normal text-accent-ink/80 min-[900px]:text-base">{t.tagline.en}</span>
+        </p>
+        <div className="mx-auto mt-auto w-full max-w-[300px] min-[900px]:my-auto min-[900px]:max-w-[640px] min-[900px]:pb-6">
+          <LoginCrew mood={mood} look={look} lookRow={focus === 'pw' ? 1 : 0} wrongKey={wrongKey} />
         </div>
       </section>
 
       <main className="flex flex-1 flex-col items-center justify-center gap-3.5 px-4 pt-5 pb-7">
         <div className="flex w-full max-w-[440px] flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-card min-[900px]:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h1 className="flex flex-col text-2xl leading-tight font-bold">
+            <h1 className="flex flex-col font-display text-[28px] leading-tight font-semibold text-accent">
               <span>{t.login.th}</span> <span className="text-sm font-medium text-tx-3">{t.login.en}</span>
             </h1>
             <ApiChip status={status} />
           </div>
 
-          <div className="flex items-start gap-3 rounded-control border border-line bg-raised px-3.5 py-3 text-[15px]">
-            <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent" />
-            <Bi p={t.demoLogin} />
+          <div className="flex items-start gap-3 rounded-control bg-pink-soft px-3.5 py-3 text-[15px]">
+            <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-pink-ink" />
+            <p className="flex flex-1 flex-col leading-tight">
+              <span>{t.demoLogin.th}</span>
+              <En className="mt-0.5">{t.demoLogin.en}</En>
+            </p>
+            <span className="flex shrink-0 flex-col items-end leading-tight">
+              <code className="rounded-chip bg-surface px-2 py-0.5 font-mono text-base font-bold text-pink-ink">{DEMO_PASSWORD}</code>
+              <En className="mt-0.5">{t.demoPw.th} · {t.demoPw.en}</En>
+            </span>
           </div>
 
           {offline && (
@@ -193,6 +191,8 @@ export default function Login() {
                     setId(e.target.value)
                     setErrors((er) => ({ ...er, id: false }))
                   }}
+                  onFocus={() => setFocus('id')}
+                  onBlur={() => setFocus(null)}
                   autoComplete="username"
                   placeholder={t.opPlaceholder}
                   spellCheck={false}
@@ -219,10 +219,13 @@ export default function Login() {
                   onChange={(e) => {
                     setPw(e.target.value)
                     setErrors((er) => ({ ...er, pw: false }))
+                    setPwWrong(false)
                   }}
+                  onFocus={() => setFocus('pw')}
+                  onBlur={() => setFocus(null)}
                   autoComplete="current-password"
-                  aria-invalid={errors.pw || undefined}
-                  aria-describedby={errors.pw ? 'login-pw-err' : undefined}
+                  aria-invalid={errors.pw || pwWrong || undefined}
+                  aria-describedby={errors.pw ? 'login-pw-err' : pwWrong ? 'login-pw-wrong' : undefined}
                 />
                 <Button
                   type="button"
@@ -237,6 +240,17 @@ export default function Login() {
                 </Button>
               </div>
               {errors.pw && <FieldError id="login-pw-err" p={t.pwRequired} />}
+              {pwWrong && (
+                <div role="alert">
+                  <FieldError
+                    id="login-pw-wrong"
+                    p={{
+                      th: `${t.wrongPw.th} · ${t.wrongPwHint.th} ${DEMO_PASSWORD}`,
+                      en: `${t.wrongPw.en}. ${t.wrongPwHint.en} ${DEMO_PASSWORD}.`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -249,19 +263,10 @@ export default function Login() {
                 />
                 <Bi p={t.keepSignedIn} />
               </label>
-              <div className="flex flex-col items-end text-right">
-                <button
-                  type="button"
-                  disabled
-                  aria-describedby="login-forgot-hint"
-                  className="min-h-11 cursor-not-allowed px-1 text-[15px] font-semibold text-tx-3 line-through decoration-tx-3/50"
-                >
-                  {t.forgot.th} <span className="text-[12.5px] font-normal">{t.forgot.en}</span>
-                </button>
-                <span id="login-forgot-hint" className="-mt-2 text-[13px] text-tx-3">
-                  {bi(t.forgotHint)}
-                </span>
-              </div>
+              <p className="text-right text-[13px] leading-tight text-tx-3">
+                <span className="block">{t.forgot.th}</span>
+                <span className="block">{t.forgot.en}</span>
+              </p>
             </div>
 
             <Button type="submit" size="lg" className="w-full">

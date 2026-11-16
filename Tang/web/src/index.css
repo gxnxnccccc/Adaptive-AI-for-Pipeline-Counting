@@ -1,31 +1,35 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Light tokens copied from docs/design/preview/capture-upload.html (Tang, 2026-11-10: the whole app
-   follows that preview). Names stay the same so components keep working. */
+/* Brand tokens (Tang, 2026-11-16): Deep blue #09318D, Pure white #FFFFFF, Bubblegum pink #FD91CC.
+   Pink is a fill only (2.1:1 on white); text on pink-soft uses pink-ink. Names unchanged so components keep working. */
 @theme {
-  --color-bg: #f9fafb;
+  --color-bg: #f4f6fc;
   --color-surface: #ffffff;
-  --color-raised: #f3f4f6;
-  --color-line: #e5e7eb;
-  --color-line-2: #d1d5db;
-  --color-tx: #1f2937;
-  --color-tx-2: #4b5563;
-  --color-tx-3: #6b7280;
-  --color-accent: #2563eb;
-  --color-accent-hi: #1d4ed8;
+  --color-raised: #ecf0fa;
+  --color-line: #dfe4f1;
+  --color-line-2: #c3cbe0;
+  --color-tx: #0a1a4a;
+  --color-tx-2: #3b4770;
+  --color-tx-3: #5a6488;
+  --color-accent: #09318d;
+  --color-accent-hi: #062466;
   --color-accent-ink: #ffffff;
+  --color-pink: #fd91cc;
+  --color-pink-soft: #ffe6f3;
+  --color-pink-ink: #a0105c;
   --color-ok: #15803d;
   --color-ok-surface: #dcfce7; /* success toast background */
-  --color-warn: #78350f;
+  --color-warn: #7a3b0c;
   --color-err: #b91c1c;
-  --color-photo-bg: #e5e7eb; /* behind photos */
+  --color-photo-bg: #dfe4f1; /* behind photos */
   --color-err-hi: #991b1b; /* error detail text */
-  --color-viz-1: #2563eb;
-  --color-viz-2: #7c3aed;
+  --color-viz-1: #09318d;
+  --color-viz-2: #d2337f;
 
-  --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-sans: "Anuphan", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
+  --font-display: "Mitr", "Anuphan", system-ui, sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   --radius-chip: 6px;
   --radius-control: 10px;
@@ -40,9 +44,9 @@
 
   --animate-api-pulse: api-pulse 2s infinite;
   @keyframes api-pulse {
-    0% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0.6); }
-    70% { box-shadow: 0 0 0 7px rgb(74 222 128 / 0); }
-    100% { box-shadow: 0 0 0 0 rgb(74 222 128 / 0); }
+    0% { box-shadow: 0 0 0 0 rgb(21 128 61 / 0.45); }
+    70% { box-shadow: 0 0 0 7px rgb(21 128 61 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(21 128 61 / 0); }
   }
 
   /* Processing: scan line over detecting thumbnails + indeterminate bar (preview .scan / .pbar.ind) */
@@ -81,8 +85,118 @@
     outline-offset: 2px;
   }
   ::placeholder {
-    color: #9ca3af;
+    color: #687192;
   }
+}
+
+/* Login crew (components/LoginCrew.tsx). Nested groups so each motion owns one transform:
+   .crew-lean = mood lean, .crew-grow = intro, .crew-face = turn/shake, .crew-pupils = gaze. */
+.crew {
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.crew-letter {
+  font-family: var(--font-display);
+  font-size: 250px;
+  font-weight: 600;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: crew-letter-in 0.6s var(--spring) backwards; /* not `both`: a held animation would override the squash transition */
+  animation-delay: calc(var(--i) * 90ms);
+  transition:
+    transform 0.42s cubic-bezier(0.55, 0, 0.75, 0) calc(var(--i) * 70ms),
+    opacity 0.2s linear calc(var(--i) * 70ms + 0.24s);
+}
+.crew:not([data-phase='letters']) .crew-letter {
+  transform: scale(1.3, 0);
+  opacity: 0;
+}
+.crew[data-phase='ready'] .crew-letters {
+  display: none;
+}
+@keyframes crew-letter-in {
+  from { transform: translateY(40px); opacity: 0; }
+}
+.crew-grow,
+.crew-lean {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.crew-grow {
+  transition: transform 0.7s var(--spring) calc(0.12s + var(--i) * 90ms);
+}
+.crew[data-phase='letters'] .crew-grow {
+  transform: scale(0.6, 0);
+}
+.crew-lean {
+  transition: transform 0.5s var(--spring) calc(var(--i) * 45ms);
+}
+.crew[data-mood='watch'] .crew-lean { transform: rotate(5deg); }
+.crew[data-mood='away'] .crew-lean { transform: rotate(-3deg); }
+.crew[data-mood='wrong'] .crew-lean {
+  animation: crew-recoil 1.2s ease-in-out calc(var(--i) * 40ms) both;
+}
+@keyframes crew-recoil {
+  0% { transform: rotate(0); }
+  20%, 78% { transform: rotate(-9deg); }
+  100% { transform: rotate(0); }
+}
+.crew-face {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transition: transform 0.4s ease-out;
+}
+.crew[data-mood='away'] .crew-face { transform: translateX(var(--turn)) scaleX(0.72); }
+.crew[data-mood='wrong'] .crew-face { animation: crew-shake 0.7s ease-in-out 0.3s both; }
+@keyframes crew-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  35% { transform: translateX(8px); }
+  55% { transform: translateX(-6px); }
+  75% { transform: translateX(5px); }
+}
+.crew-eyes {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: crew-blink 5.2s infinite;
+  animation-delay: calc(2.4s + var(--i) * 0.9s);
+}
+@keyframes crew-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.crew-pupils {
+  transform: translate(var(--px), var(--py));
+  transition: transform 0.22s ease-out;
+}
+.crew[data-mood='away'] .crew-pupils { transform: translate(-5px, -1px); }
+.crew[data-mood='wrong'] .crew-pupils { transform: translate(-3px, 0); }
+.crew-brow-l,
+.crew-brow-r {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transition: transform 0.3s var(--spring);
+}
+.crew[data-mood='watch'] :is(.crew-brow-l, .crew-brow-r) { transform: translateY(-4px); }
+.crew[data-mood='wrong'] .crew-brow-l { transform: translateY(-2px) rotate(-16deg); }
+.crew[data-mood='wrong'] .crew-brow-r { transform: translateY(-2px) rotate(16deg); }
+.crew-mouth > * {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.crew[data-mood='idle'] .m-smile,
+.crew[data-mood='watch'] .m-o,
+.crew[data-mood='away'] .m-flat,
+.crew[data-mood='wrong'] .m-frown {
+  opacity: 1;
+}
+.crew-name {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  fill: rgb(255 255 255 / 0.78);
+}
+@media (max-width: 899px) {
+  .crew-name { display: none; } /* ~7 px at phone size: unreadable */
 }
 
 @media (prefers-reduced-motion: reduce) {

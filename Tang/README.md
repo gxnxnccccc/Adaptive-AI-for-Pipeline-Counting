@@ -25,7 +25,7 @@ Install Python 3.12+, then double-click `demo/start.bat` (Mac/Linux: `demo/start
    cd Adaptive-AI-for-Pipeline-Counting/Tang
    docker compose up --build
    ```
-3. Open http://localhost:8080 and log in with any ID and password.
+3. Open http://localhost:8080 and log in with any ID and the password `spds`.
 
 Demo data is kept in memory only: it is lost when the containers restart. Stop with Ctrl+C or `docker compose down`. To use real Supabase instead, put the keys in `api/.env` and uncomment the `env_file` lines in `docker-compose.yml`.
 
@@ -47,7 +47,7 @@ npm install
 cp .env.example .env                              # VITE_API_URL=http://localhost:8000
 npm run dev                                       # http://localhost:5173
 ```
-Demo login: any Operator ID and password (mock, not real security).
+Demo login: any Operator ID + password `spds` (mock, not real security; any other password shows the "wrong password" state).
 
 Checks: `cd api && .venv/Scripts/python -m pytest` and `cd web && npx vitest run`.
 
