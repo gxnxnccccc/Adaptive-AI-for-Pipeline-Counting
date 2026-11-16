@@ -1,20 +1,27 @@
-import { bi, t } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 
-// SPDS logo (pipe stack + blue corner guides) and wordmark. The parent sets the flex layout
-// (AppShell wraps it in a home link, Login in a plain div).
-export default function BrandMark({ withSub = true }: { withSub?: boolean }) {
+// SPDS logo (three pipe ends, one counted in pink) and wordmark. The parent sets the flex layout
+// (AppShell wraps it in a home link, Login in a plain div). Subtitle = Thai line + English line,
+// so it never wraps mid-phrase in the 248 px sidebar.
+export default function BrandMark({ withSub = true, onDark = false }: { withSub?: boolean; onDark?: boolean }) {
   return (
     <>
-      <svg viewBox="0 0 40 40" aria-hidden="true" className="size-9 shrink-0 fill-none">
-        <rect x=".5" y=".5" width="39" height="39" rx="9" className="fill-surface stroke-line" />
-        <circle cx="14.5" cy="24.5" r="5.5" strokeWidth="2" className="stroke-tx-2" />
-        <circle cx="25.5" cy="24.5" r="5.5" strokeWidth="2" className="stroke-tx-2" />
-        <circle cx="20" cy="15" r="5.5" strokeWidth="2" className="stroke-accent" />
-        <path d="M6 11V6h5M34 11V6h-5M6 29v5h5M34 29v5h-5" strokeWidth="1.6" strokeLinecap="round" className="stroke-accent" />
+      <svg viewBox="0 0 40 40" aria-hidden="true" className="size-9 shrink-0">
+        <rect width="40" height="40" rx="11" className={onDark ? 'fill-surface' : 'fill-accent'} />
+        <circle cx="14" cy="25" r="6" className={onDark ? 'fill-accent' : 'fill-surface'} />
+        <circle cx="26" cy="25" r="6" className={onDark ? 'fill-accent' : 'fill-surface'} />
+        <circle cx="20" cy="14.5" r="6" className="fill-pink" />
       </svg>
       <span className="flex flex-col">
-        <b className="font-mono text-lg leading-tight tracking-[.14em] text-accent-hi">SPDS</b>
-        {withSub && <span className="text-[12.5px] font-normal tracking-[.01em] text-tx-3">{bi(t.brandSub)}</span>}
+        <b className={`font-display text-lg leading-none font-semibold tracking-[.06em] ${onDark ? 'text-surface' : 'text-accent'}`}>
+          SPDS
+        </b>
+        {withSub && (
+          <span className={`mt-1 flex flex-col text-[12.5px] leading-tight ${onDark ? 'text-surface/80' : 'text-tx-3'}`}>
+            <span>{t.brandSub.th}</span>
+            <span>{t.brandSub.en}</span>
+          </span>
+        )}
       </span>
     </>
   )

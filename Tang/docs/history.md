@@ -2,6 +2,15 @@
 
 Short update log so any session can continue. Details live in plans, decisions, and the problem log.
 
+## 2026-11-16 (Sun)
+**Done**
+- UI review (screens at 1280 + 375) -> fixed: struck-through "Forgot?", Result phone order, silent disabled Submit, "03/04" tags, sidebar subtitle wrap, placeholder contrast.
+- New brand theme (deep blue / white / pink) + fonts Mitr / Anuphan / Spline Sans Mono across the app.
+- Login redesigned: "RAI" morphs into the 5-member crew; they lean in while typing, turn away when the password is shown, shake their heads on a wrong password. Spec: `docs/design/login-crew.md`.
+- Mock login password = `spds`. Demo bundle rebuilt. Checks: web tsc + eslint + 198 vitest, api 99 pytest.
+**Open**
+- Tang to confirm fonts + demo password. Dashboard day-over-day deltas (needs API field) -> backlog.
+
 ## 2026-11-10 (Tue)
 **Done**
 - One light design for the whole app (from `capture-upload.html`); dark ui-v2 look dropped, 4 dark previews deleted. Processing rebuilt to match the preview (CTA button, no auto-navigate).

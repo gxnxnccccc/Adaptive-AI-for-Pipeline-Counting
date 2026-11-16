@@ -150,7 +150,8 @@ export default function Result() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 min-[1180px]:grid min-[1180px]:grid-cols-[minmax(0,1fr)_400px] min-[1180px]:items-start min-[1180px]:gap-5">
+    // Phone: photo -> confirm -> save/remove (DOM order). Desktop: photo + tools left, confirm sticky right.
+    <div className="flex min-w-0 flex-col gap-4 min-[1180px]:grid min-[1180px]:grid-cols-[minmax(0,1fr)_400px] min-[1180px]:grid-rows-[auto_1fr] min-[1180px]:items-start min-[1180px]:gap-5">
       <Card role="region" aria-labelledby="v-name" aria-busy={locked} className="min-w-0 gap-0 py-0">
         <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 sm:px-4 sm:py-3.5">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -261,11 +262,19 @@ export default function Result() {
             <span className="text-xs font-normal text-tx-3">{t.undo.en}</span>
           </Button>
         </div>
-        <div className="px-4 pt-2.5">
+        <div className="px-4 pt-2.5 pb-1">
           <BoxLegend />
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2 border-t border-line px-4 py-3">
+        <PhotoStrip photos={photos} edits={edits} urls={urls} selectedId={p.id} onSelect={select} />
+      </Card>
+
+      <div className="flex min-w-0 flex-col gap-4 min-[1180px]:sticky min-[1180px]:top-4 min-[1180px]:col-start-2 min-[1180px]:row-span-2 min-[1180px]:row-start-1">
+        {confirm}
+      </div>
+
+      <Card role="group" aria-label={bi(t.photoTools)} className="min-w-0 gap-0 py-0 min-[1180px]:col-start-1 min-[1180px]:row-start-2">
+        <div className="flex flex-wrap gap-2 px-4 py-3">
           <Button variant="secondary" className="max-sm:flex-[1_1_140px]" disabled={locked} onClick={saveOriginal}>
             <Download aria-hidden="true" className="size-5" />
             <Bi p={t.vwSaveOriginal} />
@@ -282,11 +291,7 @@ export default function Result() {
             {msg?.text}
           </span>
         </div>
-
-        <PhotoStrip photos={photos} edits={edits} urls={urls} selectedId={p.id} onSelect={select} />
       </Card>
-
-      <div className="flex min-w-0 flex-col gap-4 min-[1180px]:sticky min-[1180px]:top-4">{confirm}</div>
     </div>
   )
 }

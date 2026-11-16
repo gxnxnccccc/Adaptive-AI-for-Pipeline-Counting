@@ -52,7 +52,7 @@ function Flow({ step }: { step: 1 | 2 }) {
             aria-current={i + 1 === step ? 'step' : undefined}
             className="group flex items-center gap-1.5 aria-[current=step]:font-semibold aria-[current=step]:text-tx"
           >
-            <span className="grid size-6 place-items-center rounded-full border border-line-2 font-mono text-xs group-aria-[current=step]:border-accent group-aria-[current=step]:bg-accent/12 group-aria-[current=step]:text-accent">
+            <span className="grid size-6 place-items-center rounded-full border border-line-2 font-mono text-xs group-aria-[current=step]:border-pink group-aria-[current=step]:bg-pink-soft group-aria-[current=step]:text-pink-ink">
               {i + 1}
             </span>
             <span className="flex flex-col leading-tight">
@@ -97,7 +97,7 @@ export default function AppShell() {
               key={n.to}
               to={n.to}
               aria-current={current(n)}
-              className="group flex min-h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-raised hover:text-tx aria-[current=page]:bg-accent/12 aria-[current=page]:text-tx aria-[current=page]:shadow-[inset_3px_0_0_var(--color-accent)]"
+              className="group flex min-h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-raised hover:text-tx aria-[current=page]:bg-pink-soft aria-[current=page]:text-tx aria-[current=page]:shadow-[inset_3px_0_0_var(--color-accent)]"
             >
               <n.icon aria-hidden="true" className="size-5 shrink-0 group-aria-[current=page]:text-accent" />
               <span className="flex min-w-0 flex-col leading-tight">
@@ -154,7 +154,7 @@ export default function AppShell() {
               ) : (
                 <span className="mb-1.5 block font-mono text-xs font-medium tracking-[.08em] text-tx-3 uppercase">SPDS / {page.tag}</span>
               )}
-              <h1 className="flex flex-col gap-0.5 text-[22px] leading-tight font-bold text-accent-hi desk:text-[28px]">
+              <h1 className="flex flex-col gap-0.5 font-display text-[22px] leading-tight font-semibold text-accent desk:text-[30px]">
                 <span>{page.title.th}</span>
                 <span className="text-[13px] font-medium text-tx-3 desk:text-sm">{page.title.en}</span>
               </h1>
@@ -192,7 +192,7 @@ export default function AppShell() {
               aria-current={current(n)}
               className="relative flex min-h-15 flex-col items-center justify-center gap-px text-sm font-semibold text-tx-2 aria-[current=page]:text-accent"
             >
-              {current(n) && <span aria-hidden="true" className="absolute inset-x-[28%] -top-px h-[3px] rounded-b-[3px] bg-accent" />}
+              {current(n) && <span aria-hidden="true" className="absolute inset-x-[28%] -top-px h-[3px] rounded-b-[3px] bg-pink" />}
               <n.icon aria-hidden="true" className="size-5" />
               <span>{n.tab.th}</span>
               <span className="text-xs font-normal opacity-85">{n.tab.en}</span>

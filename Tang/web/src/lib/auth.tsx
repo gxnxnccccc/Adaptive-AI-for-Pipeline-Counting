@@ -1,8 +1,10 @@
-// MOCK login for the demo: any non-empty Operator ID + password gets in. NOT real security.
+// MOCK login for the demo: any non-empty Operator ID + the demo password gets in. NOT real security.
+// The fixed password exists so the login page can show a "wrong password" state (Tang, 2026-11-16).
 // Real login (Supabase Auth / company SSO) is Backlog (docs/plans/app-flow.md).
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 const KEY = 'spds.operator'
+export const DEMO_PASSWORD = 'spds'
 type StoreName = 'localStorage' | 'sessionStorage'
 
 // Storage can throw (private mode, blocked site data), so every access is wrapped.
@@ -24,7 +26,7 @@ function write(store: StoreName, value: string | null) {
 
 type Auth = {
   operator: string | null
-  // Returns false (and does nothing) when a field is empty.
+  // Returns false (and does nothing) when a field is empty or the password isn't DEMO_PASSWORD.
   login: (operatorId: string, password: string, keep?: boolean) => boolean
   logout: () => void
 }
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((operatorId: string, password: string, keep = true) => {
     const id = operatorId.trim()
-    if (!id || !password.trim()) return false
+    if (!id || password !== DEMO_PASSWORD) return false
     // "Keep me signed in" = localStorage, otherwise this tab only.
     write('localStorage', keep ? id : null)
     write('sessionStorage', keep ? null : id)

@@ -65,7 +65,7 @@ describe('detection session', () => {
     renderSession()
     act(() => api.session.start('b1', []))
     act(() => {
-      api.auth.login('OP-2', 'x')
+      api.auth.login('OP-2', 'spds')
     })
     expect(screen.getByTestId('batch')).toHaveTextContent('none')
   })

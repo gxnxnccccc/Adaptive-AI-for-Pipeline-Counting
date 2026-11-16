@@ -33,13 +33,12 @@ const Bi = ({ p }: { p: Pair }) => (
 )
 const chip = 'inline-flex min-h-[30px] items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-semibold'
 const input =
-  'w-full min-h-12 rounded-control border border-line-2 bg-surface px-3.5 py-2.5 text-base text-tx transition-colors hover:border-tx-3/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(37_99_235/0.25)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-err aria-invalid:shadow-[0_0_0_3px_rgb(185_28_28/0.2)]'
+  'w-full min-h-12 rounded-control border border-line-2 bg-surface px-3.5 py-2.5 text-base text-tx transition-colors hover:border-tx-3/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(9_49_141/0.22)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-err aria-invalid:shadow-[0_0_0_3px_rgb(185_28_28/0.2)]'
 
-function CardTitle({ id, tag, title }: { id: string; tag: string; title: Pair }) {
+function CardTitle({ id, title }: { id: string; title: Pair }) {
   return (
     <div className="px-4 pt-4">
       <h2 id={id} className="flex flex-col text-[17px] leading-tight font-bold">
-        <span className="font-mono text-xs font-medium tracking-[.08em] text-tx-3 uppercase">{tag}</span>
         <span>{title.th}</span>
         <En>{title.en}</En>
       </h2>
@@ -60,7 +59,7 @@ function FieldError({ id, show, text }: { id: string; show: boolean; text: Pair 
   )
 }
 
-// "03 · Count": model total -> corrected total over the kept, non-failed photos (preview .tot-grid / .kv / .per).
+// Totals: model total -> corrected total over the kept, non-failed photos (preview .tot-grid / .kv / .per).
 function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<string, PhotoEdits> }) {
   const tot = totals(photos, edits)
   const ok = photos.filter((p) => !p.result.error)
@@ -76,7 +75,7 @@ function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<strin
 
   return (
     <Card role="region" aria-labelledby="h-tot" className="gap-0 py-0">
-      <CardTitle id="h-tot" tag="03 · Count" title={t.totalsTitle} />
+      <CardTitle id="h-tot" title={t.totalsTitle} />
       <div className="p-4">
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
           <div className={cn(cell, 'border-line bg-bg')}>
@@ -86,7 +85,7 @@ function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<strin
             </b>
           </div>
           <ArrowRight aria-hidden="true" className="size-5 self-center text-tx-3" />
-          <div className={cn(cell, 'border-accent/55 bg-linear-to-b from-accent/10 to-surface')}>
+          <div className={cn(cell, 'border-pink bg-pink-soft')}>
             <Bi p={t.correctedTotal} />
             <b data-testid="corrected-total" aria-live="polite" className={cn(big, 'text-accent')}>
               {tot.corrected}
@@ -164,7 +163,7 @@ function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<strin
   )
 }
 
-// Right panel of Result (ui-v2 task 8c): totals + "04 · Confirm" form, submit, cancel dialog.
+// Right panel of Result (ui-v2 task 8c): totals + confirm form, submit, cancel dialog.
 export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusyChange }: Props) {
   const tot = totals(photos, edits)
   const [doNumber, setDoNumber] = useState('')
@@ -193,7 +192,13 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
   async function submit(e: FormEvent) {
     e.preventDefault()
     setTouched({ doNumber: true, notes: true })
-    if (!valid || actualNum === null || inFlight.current) return
+    if (!valid || actualNum === null) {
+      // Button stays enabled so a tap explains itself: errors show and focus jumps to the first bad field.
+      const first = errors.doNumber ? 'cf-do' : errors.actual ? 'cf-act' : 'cf-notes'
+      document.getElementById(first)?.focus()
+      return
+    }
+    if (inFlight.current) return
     inFlight.current = true
     setBusy(true)
     onBusyChange(true)
@@ -217,7 +222,7 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
       <Totals photos={photos} edits={edits} />
 
       <Card role="region" aria-labelledby="h-cf" className="gap-0 py-0">
-        <CardTitle id="h-cf" tag="04 · Confirm" title={t.confirmTitle} />
+        <CardTitle id="h-cf" title={t.confirmTitle} />
         <form onSubmit={submit} noValidate className="flex flex-col gap-4 p-4">
           {error && (
             <div
@@ -370,11 +375,17 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
           </div>
 
           <div className="flex flex-col gap-1.5">
+            {missing.length > 0 && !busy && (
+              <p id="cf-sub-help" className="flex items-start gap-1.5 text-[13px] text-tx-2">
+                <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-tx-3" />
+                {bi(t.missing(missing.map((p) => p.th).join(', '), missing.map((p) => p.en).join(', ')))}
+              </p>
+            )}
             <Button
               type="submit"
               size="lg"
               className="w-full whitespace-normal"
-              disabled={!valid || busy}
+              disabled={busy}
               aria-describedby={missing.length ? 'cf-sub-help' : undefined}
             >
               {busy ? (
@@ -394,11 +405,6 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
                 )
               })()}
             </Button>
-            {missing.length > 0 && !busy && (
-              <p id="cf-sub-help" className="text-center text-[13px] text-tx-3">
-                {bi(t.missing(missing.map((p) => p.th).join(', '), missing.map((p) => p.en).join(', ')))}
-              </p>
-            )}
           </div>
 
           <div className="flex justify-center border-t border-line pt-3">

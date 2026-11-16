@@ -43,12 +43,12 @@ describe('Login', () => {
     expect(idField()).toBe(screen.getByLabelText(/Operator ID/))
     expect(pwField()).toBe(screen.getByLabelText(/^รหัสผ่าน.*Password/))
     expect(screen.getByRole('checkbox', { name: /จดจำการเข้าสู่ระบบ.*Keep me signed in/ })).toBeChecked()
-    expect(screen.getByText(/Demo login only/)).toBeInTheDocument()
+    expect(screen.getByText(/Demo login, not real security/)).toBeInTheDocument()
+    expect(screen.getByText('spds')).toBeInTheDocument() // demo password shown on the card
     expect(screen.getByText('นับท่อเหล็กจากรูปถ่าย')).toBeInTheDocument()
-    // Forgot is disabled with a visible "contact admin" hint
-    const forgot = screen.getByRole('button', { name: /ลืมรหัสผ่าน\? Forgot\?/ })
-    expect(forgot).toBeDisabled()
-    expect(forgot).toHaveAccessibleDescription(/ติดต่อผู้ดูแลระบบ · Contact admin/)
+    // "Forgot" is plain help text now, not a struck-through disabled button
+    expect(screen.queryByRole('button', { name: /Forgot/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/Ask your admin/)).toBeInTheDocument()
     expect(await screen.findByRole('status', { name: /API online/ })).toBeInTheDocument()
   })
 
@@ -76,7 +76,7 @@ describe('Login', () => {
     expect(pwField()).toHaveAttribute('aria-invalid', 'true')
     await user.click(signInBtn())
     expect(pwField()).toHaveFocus()
-    await user.type(pwField(), 'x')
+    await user.type(pwField(), 'spds')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
@@ -84,7 +84,7 @@ describe('Login', () => {
     const user = userEvent.setup()
     renderLogin()
     await user.type(idField(), 'OP-7')
-    await user.type(pwField(), 'x')
+    await user.type(pwField(), 'spds')
     await user.click(signInBtn())
     expect(screen.getByTestId('path')).toHaveTextContent('/processing')
     expect(localStorage.getItem('spds.operator')).toBe('OP-7')
@@ -95,7 +95,7 @@ describe('Login', () => {
     renderLogin()
     await user.click(screen.getByRole('checkbox'))
     await user.type(idField(), 'OP-7')
-    await user.type(pwField(), 'x')
+    await user.type(pwField(), 'spds')
     await user.click(signInBtn())
     expect(screen.getByTestId('path')).toHaveTextContent('/processing')
     expect(sessionStorage.getItem('spds.operator')).toBe('OP-7')
@@ -124,7 +124,7 @@ describe('Login', () => {
     expect(screen.getByRole('status', { name: /API offline/ })).toBeInTheDocument()
     expect(signInBtn()).toBeEnabled()
     await user.type(idField(), 'OP-7')
-    await user.type(pwField(), 'x')
+    await user.type(pwField(), 'spds')
     await user.click(signInBtn())
     expect(screen.getByTestId('path')).toHaveTextContent('/processing')
   })
@@ -156,8 +156,35 @@ describe('Login', () => {
     expect(again).toHaveClass('min-h-11') // 44 px
     expect(eye()).toHaveClass('size-11')
     expect(signInBtn()).toHaveClass('min-h-13') // 52 px
-    expect(screen.getByRole('button', { name: /Forgot/ })).toHaveClass('min-h-11')
     expect(screen.getByRole('checkbox').closest('label')).toHaveClass('min-h-11')
     expect(idField()).toHaveClass('min-h-12') // 48 px input
+  })
+
+  it('wrong password: field error with the demo password, crew recoils, no navigation', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    await user.type(idField(), 'OP-07')
+    await user.type(pwField(), 'nope')
+    await user.click(signInBtn())
+    expect(screen.getByRole('alert')).toHaveTextContent(/Wrong password\. The demo password is spds/)
+    expect(pwField()).toHaveAttribute('aria-invalid', 'true')
+    expect(pwField()).toHaveFocus()
+    expect(screen.getByTestId('crew')).toHaveAttribute('data-mood', 'wrong')
+    expect(screen.queryByText('PROCESSING')).not.toBeInTheDocument()
+    await user.type(pwField(), 'x') // editing clears the error
+    expect(pwField()).not.toHaveAttribute('aria-invalid')
+  })
+
+  it('crew: idle, leans in while a field has focus, turns away while the password is shown', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    const crew = screen.getByTestId('crew')
+    expect(crew).toHaveAttribute('data-mood', 'idle')
+    await user.click(idField())
+    expect(crew).toHaveAttribute('data-mood', 'watch')
+    await user.click(eye())
+    expect(crew).toHaveAttribute('data-mood', 'away')
+    await user.click(eye())
+    expect(crew).not.toHaveAttribute('data-mood', 'away')
   })
 })

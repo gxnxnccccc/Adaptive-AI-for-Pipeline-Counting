@@ -37,7 +37,7 @@ const C = {
 const MONO = 'var(--font-mono)'
 const H = 230
 const axisTick = { fill: C.tx3, fontSize: 12, fontFamily: MONO }
-const hoverBand = { fill: 'rgb(31 41 55 / 0.06)' }
+const hoverBand = { fill: 'rgb(10 26 74 / 0.06)' }
 
 const En = ({ children }: { children: ReactNode }) => <span className="text-xs font-normal text-tx-3">{children}</span>
 
