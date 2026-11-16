@@ -1,7 +1,8 @@
 @echo off
 rem Rebuilds SPDS.exe from the CURRENT web + api code. Run after every UI/API change. Needs Python 3.12+ and Node 20+.
-rem Output: Tang\demo\dist\SPDS.exe  (also copied to your Desktop). Close any running SPDS.exe first.
+rem Stops any running SPDS.exe first (an old copy keeps the port and the old UI alive). Output: Tang\demo\dist\SPDS.exe  (also copied to your Desktop). Close any running SPDS.exe first.
 cd /d "%~dp0"
+taskkill /f /im SPDS.exe >nul 2>&1
 echo [1/3] Building the web app...
 pushd ..\web
 call npm ci --no-audit --no-fund || (echo npm install failed & popd & pause & exit /b 1)

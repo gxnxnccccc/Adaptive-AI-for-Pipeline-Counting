@@ -13,8 +13,8 @@ import { cn } from '@/lib/utils'
 // (states: default, empty fields, wrong password, checking, API offline).
 // Login is the MOCK from lib/auth.tsx (any non-empty ID + DEMO_PASSWORD); the card says so.
 
-const En = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <span className={cn('text-[12.5px] font-normal tracking-[.01em] text-tx-3', className)}>{children}</span>
+const En = ({ children, className, ...rest }: { children: ReactNode; className?: string; 'data-testid'?: string }) => (
+  <span className={cn('text-[12.5px] font-normal tracking-[.01em] text-tx-3', className)} {...rest}>{children}</span>
 )
 const Bi = ({ p, className }: { p: Pair; className?: string }) => (
   <span className={cn('inline-flex flex-col leading-tight', className)}>
@@ -278,6 +278,7 @@ export default function Login() {
           </form>
         </div>
         <En>{bi(t.loginFoot)}</En>
+        <En className="font-mono text-xs" data-testid="build">build {typeof __BUILD__ === 'string' ? __BUILD__ : 'dev'}</En>
       </main>
     </div>
   )
