@@ -3,6 +3,12 @@ rem Builds Desktop\SPDS.exe = the LIVE launcher for THIS repo folder (spds_live.
 rem Build once: the exe pulls new code itself on every start, so you don't rebuild after code changes.
 cd /d "%~dp0"
 taskkill /f /im SPDS.exe >nul 2>&1
+rem Delete the old exe and old build output first, so nothing stale gets reused.
+timeout /t 1 /nobreak >nul
+if exist "%USERPROFILE%\Desktop\SPDS.exe" del /f /q "%USERPROFILE%\Desktop\SPDS.exe"
+if exist "%USERPROFILE%\Desktop\SPDS.exe" (echo Could not delete Desktop\SPDS.exe. Close it and try again. & pause & exit /b 1)
+if exist dist rmdir /s /q dist
+if exist build rmdir /s /q build
 for %%I in ("%~dp0..\..") do set "REPO=%%~fI"
 if not exist build mkdir build
 > build\repo_path.txt echo %REPO%
