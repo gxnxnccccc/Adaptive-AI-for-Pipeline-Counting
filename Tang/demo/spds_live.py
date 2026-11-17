@@ -3,7 +3,8 @@
 Double-click SPDS-live.bat, or build it into SPDS.exe with build-live-exe.bat.
 Steps every start:
   1. git pull --ff-only (current branch). Local edits or a diverged branch: warn, keep current code.
-  2. npm install when web/package-lock.json changed; pip install when api/requirements.txt changed.
+     The exe then hands over to the repo's own spds_live.py, so the exe never needs a rebuild.
+  2.npm install when web/package-lock.json changed; pip install when api/requirements.txt changed.
   3. API (DEMO_MEMORY, uvicorn --reload) + Vite dev server, each on the first free port.
   4. Wait until the page answers, then open it. Close the window (or Ctrl+C) to stop both.
 Standard library only, so the exe stays small.
@@ -131,11 +132,30 @@ def wait_for(url: str, seconds: int = 90) -> bool:
     return False
 
 
+def hand_over_to_repo() -> None:
+    """Frozen exe only: run the repo's own (just pulled) spds_live.py, so launcher changes need no rebuild.
+
+    No Python on PATH or no script: return and keep going with the code baked into the exe.
+    """
+    script = TANG / "demo" / "spds_live.py"
+    base = find("py", "python", "python3") if WIN else find("python3", "python")
+    if not (base and script.exists()):
+        return
+    try:
+        code = subprocess.call([base, str(script)], env={**os.environ, "SPDS_UPDATED": "1"})
+    except KeyboardInterrupt:
+        code = 0
+    sys.exit(code)
+
+
 def main() -> None:
     say(f"Project folder: {ROOT}")
     if not WEB.exists():
         sys.exit(f"[SPDS] Can't find {WEB}. Rebuild the exe with build-live-exe.bat from your repo folder.")
-    update_code()
+    if not os.environ.get("SPDS_UPDATED"):  # set by the exe when it has already pulled
+        update_code()
+    if getattr(sys, "frozen", False):
+        hand_over_to_repo()
     npm = install_deps()
 
     api_port = free_port(8000)

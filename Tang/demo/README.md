@@ -12,8 +12,8 @@ Data lives in memory and is lost on restart. The detector is a mock.
 
 ## SPDS.exe = live launcher (Tang's PC)
 `SPDS-live.bat` / `SPDS.exe` (from `spds_live.py`) runs THIS repo folder: on every start it pulls the latest code (`git pull --ff-only`), installs changed packages, starts the API + web in live mode and opens the browser by itself.
-- Build the exe **once**: double-click `build-live-exe.bat` (needs git, Python 3.12+, Node 20+). It replaces `Desktop\SPDS.exe`.
-- After that, new code = just close and reopen `SPDS.exe`. Rebuild only if `spds_live.py` itself changed.
+- Build the exe **once**: double-click `build-live-exe.bat` (needs git, Python 3.12+, Node 20+). It deletes the old `Desktop\SPDS.exe`, builds the new one and starts it.
+- After that, new code = just close and reopen `SPDS.exe`. The exe pulls, then runs the repo's own `spds_live.py`, so even launcher changes need no rebuild (only if Python is missing from PATH does it fall back to the copy baked into the exe).
 - If it says "Could not update automatically", you have local edits or the branch moved: commit/stash them, then reopen.
 
 ## Frozen bundle (friends without git/Node)

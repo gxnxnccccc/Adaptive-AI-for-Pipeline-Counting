@@ -1,6 +1,6 @@
 @echo off
 rem Builds Desktop\SPDS.exe = the LIVE launcher for THIS repo folder (spds_live.py).
-rem Build once: the exe pulls new code itself on every start, so you don't rebuild after code changes.
+rem Build once: the exe pulls new code on every start and runs the repo's own spds_live.py, so you never rebuild. Starts the exe when done.
 cd /d "%~dp0"
 taskkill /f /im SPDS.exe >nul 2>&1
 rem Delete the old exe and old build output first, so nothing stale gets reused.
@@ -17,5 +17,7 @@ if not exist .venv\Scripts\python.exe python -m venv .venv || (echo Python not f
 .venv\Scripts\python -m PyInstaller --noconfirm --clean --onefile --console --name SPDS ^
   --distpath dist --workpath build\work --specpath build ^
   --add-data "%~dp0build\repo_path.txt;." spds_live.py || (echo PyInstaller failed & pause & exit /b 1)
-copy /y dist\SPDS.exe "%USERPROFILE%\Desktop\SPDS.exe" >nul && echo Done: Desktop\SPDS.exe now updates itself and opens the browser.
-pause
+copy /y dist\SPDS.exe "%USERPROFILE%\Desktop\SPDS.exe" >nul || (echo Could not copy SPDS.exe to the Desktop & pause & exit /b 1)
+echo Done: Desktop\SPDS.exe built. Starting it now...
+start "" "%USERPROFILE%\Desktop\SPDS.exe"
+timeout /t 3 /nobreak >nul
