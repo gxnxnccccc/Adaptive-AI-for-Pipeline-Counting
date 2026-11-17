@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import { cloneElement, type ReactElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { DailyStat, RecordRow } from '@/lib/api'
@@ -63,12 +63,13 @@ describe('DashboardCharts', () => {
 })
 
 describe('correction-rate tooltip', () => {
-  it('a day with nothing confirmed still gets a tooltip ("nothing confirmed")', () => {
+  it('a day with nothing confirmed still gets a tooltip ("nothing confirmed")', async () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
     const { container } = render(<DashboardCharts days={WEEK} confirmed={[]} />)
     const svg = container.querySelectorAll('svg.recharts-surface')[2]
     // Keyboard path of the accessibility layer: focus, then ArrowRight (focus lands on day 0) until the 0 day (index 5).
-    ;(svg as SVGElement).focus()
+    // Plain focus() is not wrapped in act() by testing-library, and recharts updates its tooltip on focus.
+    await act(async () => (svg as SVGElement).focus())
     for (let i = 0; i < 5; i++) fireEvent.keyDown(svg, { key: 'ArrowRight' })
     const tips = [...container.querySelectorAll('.recharts-tooltip-wrapper')].map((n) => n.textContent)
     expect(tips.join('|')).toMatch(/08\/11.*nothing confirmed/)

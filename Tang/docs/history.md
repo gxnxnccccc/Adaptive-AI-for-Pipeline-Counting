@@ -2,6 +2,11 @@
 
 Short update log so any session can continue. Details live in plans, decisions, and the problem log.
 
+## 2026-11-17 (Mon)
+**Done**
+- Tang opens the app with ONE Desktop shortcut "SPDS" (`demo/make-shortcut.bat`); `SPDS.exe` and the exe build scripts removed.
+- Debug pass: fixed the Dashboard React key error (`ScanLens` icon); tests now fail on any `console.error` (fixed 10 hidden `act()` warnings). Checks: web tsc + eslint + 208 vitest + build, api 99 pytest, browser click-through desktop + phone with 0 console errors / failed requests / sideways scroll.
+
 ## 2026-11-16 (Sun)
 **Done**
 - UI review (screens at 1280 + 375) -> fixed: struck-through "Forgot?", Result phone order, silent disabled Submit, "03/04" tags, sidebar subtitle wrap, placeholder contrast.

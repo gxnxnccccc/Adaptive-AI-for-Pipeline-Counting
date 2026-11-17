@@ -36,10 +36,11 @@ type Result = { n: number; data?: Data; error?: string; at: Date }
 type ChartsResult = { key: string; data?: { days: DailyStat[]; confirmed: RecordRow[] }; error?: string }
 
 // The preview's scan icon (corners + lens), which lucide has no exact match for.
+// Every node needs a unique `key` (lucide renders them as a list).
 const ScanLens = createLucideIcon('ScanLens', [
-  ['path', { d: 'M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2' }],
-  ['circle', { cx: 12, cy: 12, r: 4 }],
-  ['circle', { cx: 12, cy: 12, r: 1 }],
+  ['path', { d: 'M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2', key: 'corners' }],
+  ['circle', { cx: 12, cy: 12, r: 4, key: 'lens' }],
+  ['circle', { cx: 12, cy: 12, r: 1, key: 'dot' }],
 ])
 
 const DASH = '—'
