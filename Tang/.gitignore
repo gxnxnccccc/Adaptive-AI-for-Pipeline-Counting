@@ -10,3 +10,7 @@ uploads/
 *.sqlite3
 .DS_Store
 !.env.example
+demo/dist/
+demo/build/
+*.exe
+demo/.live-stamps.json

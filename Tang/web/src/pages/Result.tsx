@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import { Crop, Download, FileX, Info, Maximize, Trash2, TriangleAlert, Undo2 } from 'lucide-react'
+import { Crop, Download, Eye, FileX, Info, Maximize, Trash2, TriangleAlert, Undo2 } from 'lucide-react'
 import ConfirmPanel, { type ConfirmSubmit } from '@/components/ConfirmPanel'
 import PhotoStrip from '@/components/PhotoStrip'
 import PhotoViewer, { BoxLegend, type View } from '@/components/PhotoViewer'
@@ -68,6 +68,7 @@ export default function Result() {
   const { photos, batchId, edits, setEdits, removePhoto, setLastSavedDo, clear } = useDetectionSession()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [view, setView] = useState<View>('crop')
+  const [focusLow, setFocusLow] = useState(false)
   const [msg, setMsg] = useState<{ text: string; err?: boolean } | null>(null)
   // Submit in flight: the viewer and its actions are locked.
   const [locked, setLocked] = useState(false)
@@ -172,15 +173,24 @@ export default function Result() {
               </span>
             )}
             {!failed && toCheck > 0 && (
-              <span
+              <button
+                type="button"
                 data-testid="to-check"
-                className="inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-warn/40 bg-warn/12 px-2.5 text-[13px] font-semibold text-warn">
+                aria-pressed={focusLow}
+                onClick={() => setFocusLow((f) => !f)}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-warn/40 bg-warn/12 px-3 text-[13px] font-semibold text-warn hover:bg-warn/20 aria-pressed:border-warn aria-pressed:bg-warn aria-pressed:text-surface"
+              >
                 <TriangleAlert aria-hidden="true" className="size-4" />
                 <span>
                   {t.toCheck.th} <span className="font-mono">{toCheck}</span>
                 </span>
                 <span className="text-xs font-normal opacity-85">{t.toCheck.en}</span>
-              </span>
+                <span className="ml-0.5 flex items-center gap-1 border-l border-current/40 pl-2 text-xs">
+                  <Eye aria-hidden="true" className="size-3.5" />
+                  <span className="font-semibold">{t.onlyToCheck.th}</span>
+                  <span className="font-normal opacity-85">{t.onlyToCheck.en}</span>
+                </span>
+              </button>
             )}
           </div>
           {!failed && (
@@ -221,6 +231,7 @@ export default function Result() {
               label={`${name}: ${failed ? bi(t.failTitle) : `${count} ${bi(t.pipesUnit)}`}`}
               onPick={failed || locked ? undefined : (pt) => setEdits(p.id, applyPick(p, e, pt))}
               readOnly={failed || locked}
+              focusLow={focusLow && toCheck > 0}
             />
           )}
           <div aria-hidden="true" className="pointer-events-none absolute inset-2">

@@ -42,6 +42,7 @@ Where updates go:
 | Requirement finished (reviewer PASS) | tick it in `docs/requirements.md` |
 | ML team answered a question | `docs/api-contract.md` (OPEN -> CONFIRMED) |
 | Stack changed | `docs/tech-stack.md` + a line in `decisions.md` |
+| Anything in `web/src`, `web/package*.json`, `api/app` or `api/requirements.txt` changed | `cd web && npm run build:demo` (refreshes `demo/site` for the no-Node bundle), commit + push, then tell Tang: "close the SPDS window and open the **SPDS** shortcut on the Desktop again, it pulls the new code itself" |
 
 ## 3. Git rules (team repo, branch + PR)
 Start of every block:
@@ -78,6 +79,7 @@ You never write app code yourself. Route every task:
 
 - FAIL -> exact failure list back to `coder`. Max 3 loops, then stop and ask Tang.
 - Done = tester PASS + reviewer PASS + scribe logged it.
+- **SPDS shortcut rule:** Tang opens the app with ONE Desktop shortcut "SPDS" (made once by `demo/make-shortcut.bat`, runs `demo/SPDS-live.bat` -> `demo/spds_live.py`). Every start it runs `git pull --ff-only` on the branch his repo folder is on (`claude/relaxed-lamport-fiby05` since 2026-11-17), installs changed npm/pip packages, starts API + Vite and opens the browser. So: a UI/API task is not done until it is committed + pushed to that branch, `demo/site` is rebuilt, and the final message says "reopen the SPDS shortcut". Nothing to rebuild, launcher changes included. No exe anymore. Claude cannot run the Windows shortcut from the cloud.
 - Unknown from ML team -> OPEN in `docs/api-contract.md`, code behind the adapter, ask Tang. Never guess.
 - Before 30 Nov: only "Demo scope" items in `docs/requirements.md`. Everything else -> backlog.
 

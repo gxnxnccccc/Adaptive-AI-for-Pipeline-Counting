@@ -125,6 +125,21 @@ describe('Result viewer card', () => {
     expect(thumbs()[0]).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('to-check chip toggles "show only boxes to check": confident boxes fade, low ones stay', async () => {
+    const user = userEvent.setup()
+    await openResult()
+    const chip = screen.getByTestId('to-check')
+    expect(chip).toHaveAttribute('aria-pressed', 'false')
+    expect(viewer().querySelectorAll('.box-faded')).toHaveLength(0)
+    await user.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+    expect(viewer().querySelectorAll('.box-faded')).toHaveLength(1)
+    expect(viewer().querySelectorAll('.box-low')).toHaveLength(1)
+    expect(viewer().querySelector('.box-low')).not.toHaveClass('box-faded')
+    await user.click(chip)
+    expect(viewer().querySelectorAll('.box-faded')).toHaveLength(0)
+  })
+
   it('tap a model box removes it (count + strip badge), tap again restores it', async () => {
     await openResult()
     tap(20, 20)

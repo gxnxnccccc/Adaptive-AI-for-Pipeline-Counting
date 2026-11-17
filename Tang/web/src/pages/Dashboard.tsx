@@ -5,6 +5,7 @@ import {
   Check,
   CircleAlert,
   CircleCheck,
+  Download,
   Flag,
   LoaderCircle,
   Pencil,
@@ -17,6 +18,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { getDailyStats, getStats, listRecords, type DailyStat, type RecordRow, type Stats } from '@/lib/api'
 import { formatVariance } from '@/lib/confirm'
+import { downloadBlob } from '@/lib/annotate'
+import { csvFilename, recordsToCsv } from '@/lib/csv'
 import { bi, t, type Pair } from '@/lib/i18n'
 import { useShell } from '@/lib/shell-context'
 import { cn } from '@/lib/utils'
@@ -244,6 +247,43 @@ function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
   )
 }
 
+// Fetches up to 100 latest batches at click time (Recent 10 shows only 10) and saves them as CSV for the report.
+function ExportCsv() {
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState<string | null>(null)
+  async function run() {
+    setBusy(true)
+    setFailed(null)
+    try {
+      const page = await listRecords({ limit: 100 })
+      downloadBlob(new Blob([recordsToCsv(page.items)], { type: 'text/csv;charset=utf-8' }), csvFilename())
+    } catch (e) {
+      setFailed(errText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button variant="secondary" data-testid="export-csv" disabled={busy} onClick={run}>
+        {busy ? (
+          <LoaderCircle aria-hidden="true" className="size-5 motion-safe:animate-spin" />
+        ) : (
+          <Download aria-hidden="true" className="size-5" />
+        )}
+        <BiRow p={t.exportCsv} />
+      </Button>
+      {!failed && <p className="text-xs text-tx-3">{bi(t.exportCsvHint)}</p>}
+      {failed && (
+        <p role="alert" data-testid="export-csv-error" className="flex items-center gap-1.5 text-[13px] font-medium text-err">
+          <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
+          {bi(t.exportCsvFailed)}: {failed}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { toolbarSlot: slot, recheckApi } = useShell()
   const [n, setN] = useState(0) // bump to refetch
@@ -413,10 +453,13 @@ export default function Dashboard() {
 
       {!error && (
         <section aria-labelledby="rt-t" className="@container rounded-card border border-line bg-surface shadow-card">
-          <h2 id="rt-t" className="flex flex-col px-4 pt-4 pb-1 text-base leading-snug font-bold">
-            <span>{t.recent10.th}</span>
-            <En>{t.recent10.en}</En>
-          </h2>
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 pt-4 pb-1">
+            <h2 id="rt-t" className="flex flex-col text-base leading-snug font-bold">
+              <span>{t.recent10.th}</span>
+              <En>{t.recent10.en}</En>
+            </h2>
+            {data && data.recent.length > 0 && <ExportCsv />}
+          </div>
           <div className="px-4 pb-4">
             {loading ? (
               <div data-testid="recent-loading">
