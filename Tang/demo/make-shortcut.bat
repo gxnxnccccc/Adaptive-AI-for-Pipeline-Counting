@@ -2,6 +2,7 @@
 rem Puts ONE "SPDS" shortcut on your Desktop that opens the app (runs SPDS-live.bat).
 rem Run once. Run again only if you move or rename the repo folder.
 rem Also removes the old SPDS.exe (Desktop + build folders), which is no longer used.
+setlocal
 cd /d "%~dp0"
 taskkill /f /im SPDS.exe >nul 2>&1
 rem Leftovers from the old exe builds (gitignored).
