@@ -230,7 +230,7 @@ function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
                 }}
                 className="w-fit cursor-pointer text-left underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
-                {r.doNumber ?? dash}
+                {r.doNumber ?? <span className="font-sans text-sm font-normal text-tx-3">{bi(t.notConfirmedYet)}</span>}
               </button>
             </td>
             <td className={cn(td, 'font-mono')}>

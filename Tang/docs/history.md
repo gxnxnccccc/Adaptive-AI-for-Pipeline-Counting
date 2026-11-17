@@ -4,6 +4,7 @@ Short update log so any session can continue. Details live in plans, decisions, 
 
 ## 2026-11-17 (Mon)
 **Done**
+- Design-week "What to fix" built: Login crew gap + small build stamp, duplicate photos skipped, quiet compression line, numbered thumbnails, Cancel as a text link, Draft = "Not confirmed yet", model-vs-actual list under 3 batches. 8 screen specs in `docs/design/screens/` (KPI delta left for Later, no Figma).
 - Tang opens the app with ONE Desktop shortcut "SPDS" (`demo/make-shortcut.bat`); `SPDS.exe` and the exe build scripts removed.
 - All 6 remaining design-week Demo items built: crew jump on correct login, P1 photo tips card (good/bad examples), green "photo OK" chip, zoom/pan on the result photo, keys Z (undo) / N (next box to check), Recent row -> batch details dialog. Checks: 226 vitest, tsc, eslint, 99 pytest, browser run desktop + phone with 0 console errors.
 - Debug pass: fixed the Dashboard React key error (`ScanLens` icon); tests now fail on any `console.error` (fixed 10 hidden `act()` warnings). Checks: web tsc + eslint + 208 vitest + build, api 99 pytest, browser click-through desktop + phone with 0 console errors / failed requests / sideways scroll.

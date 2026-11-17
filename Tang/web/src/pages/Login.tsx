@@ -137,7 +137,7 @@ export default function Login() {
           <span>{t.tagline.th}</span>
           <span className="font-sans text-[13px] font-normal text-accent-ink/80 min-[900px]:text-base">{t.tagline.en}</span>
         </p>
-        <div className="mx-auto mt-auto w-full max-w-[300px] min-[900px]:my-auto min-[900px]:max-w-[640px] min-[900px]:pb-6">
+        <div className="mx-auto mt-auto w-full max-w-[300px] min-[900px]:my-auto min-[900px]:max-w-[720px] min-[900px]:pb-6">
           <LoginCrew mood={mood} look={look} lookRow={focus === 'pw' ? 1 : 0} wrongKey={wrongKey} />
         </div>
       </section>
@@ -324,7 +324,13 @@ export default function Login() {
           </form>
         </div>
         <En>{bi(t.loginFoot)}</En>
-        <En className="font-mono text-xs" data-testid="build">build {typeof __BUILD__ === 'string' ? __BUILD__ : 'dev'}</En>
+        {/* Build stamp: only in the live (dev) app, tiny in the corner, so an old SPDS window is still easy to spot.
+            The built bundle (demo/site, Docker) leaves it out. */}
+        {import.meta.env.DEV && (
+          <En className="fixed right-2 bottom-1 font-mono text-[10px] opacity-70" data-testid="build">
+            build {typeof __BUILD__ === 'string' ? __BUILD__ : 'dev'}
+          </En>
+        )}
       </main>
     </div>
   )

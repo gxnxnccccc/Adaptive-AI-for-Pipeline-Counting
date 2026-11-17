@@ -123,6 +123,12 @@ describe('Result viewer card', () => {
     expect(screen.getByTestId('to-check')).toHaveTextContent(/ควรตรวจ 1/)
     expect(thumbs()).toHaveLength(3)
     expect(thumbs()[0]).toHaveAttribute('aria-pressed', 'true')
+    // Numbered, so two photos with the same name are still told apart.
+    expect(thumbs().map((b) => within(b).getByTestId('thumb-num').textContent)).toEqual(['1', '2', '3'])
+    expect(thumbs()[1]).toHaveAccessibleName(/^รูปที่ 2\/3 · Photo 2 of 3: /)
+    // Cancel is a quiet text link, not a second red button next to Submit.
+    expect(screen.getByTestId('cancel-detection')).not.toHaveClass('text-err')
+    expect(screen.getByTestId('cancel-detection')).toHaveClass('underline')
   })
 
   it('to-check chip toggles "show only boxes to check": confident boxes fade, low ones stay', async () => {

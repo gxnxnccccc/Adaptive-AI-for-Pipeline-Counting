@@ -408,13 +408,17 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
           </div>
 
           <div className="flex justify-center border-t border-line pt-3">
-            <Button type="button" variant="danger" className="whitespace-normal" disabled={busy} onClick={() => setAsking(true)}>
-              <X aria-hidden="true" className="size-5" />
-              <span className="flex flex-col leading-tight">
-                <span>{t.cancelDetection.th}</span>
-                <span className="text-[12.5px] font-medium">{t.cancelDetection.en}</span>
-              </span>
-            </Button>
+            {/* Quiet text link, so only Submit looks like the main action (design-week 03). The dialog still asks first. */}
+            <button
+              type="button"
+              data-testid="cancel-detection"
+              disabled={busy}
+              onClick={() => setAsking(true)}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-control px-2 text-sm text-tx-2 underline decoration-tx-3/60 underline-offset-4 hover:text-err hover:decoration-err focus-visible:ring-3 focus-visible:ring-accent/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <X aria-hidden="true" className="size-4" />
+              {bi(t.cancelDetection)}
+            </button>
           </div>
         </form>
       </Card>

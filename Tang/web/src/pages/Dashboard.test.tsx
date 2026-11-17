@@ -132,7 +132,7 @@ describe('Dashboard', () => {
     expect(variance[1]).toMatch(/Variance\+2$/)
     expect(variance[2]).toMatch(/Variance—$/)
     expect(within(rows[0]).getByTestId('recent-do')).toHaveTextContent('DX1')
-    expect(within(rows[2]).getByTestId('recent-do')).toHaveTextContent('—')
+    expect(within(rows[2]).getByTestId('recent-do')).toHaveTextContent('ยังไม่ยืนยัน · Not confirmed yet')
     expect(screen.getByTestId('kpi-failed-icon')).not.toHaveAttribute('data-alarm')
   })
 
@@ -287,6 +287,18 @@ describe('Dashboard', () => {
       renderIt()
       expect(await screen.findByTestId('mva-empty')).toHaveTextContent('Nothing confirmed yet')
       expect(screen.queryByTestId('table-mva')).not.toBeInTheDocument()
+    })
+
+    it('model vs actual with 1-2 batches is a plain list (no plot, no legend), still with its table', async () => {
+      stubApi({ stats: wire(12, 40, 0.25, 0), items: THREE, daily: WEEK, confirmed: CONF10.slice(8) })
+      renderIt()
+      const list = await screen.findByTestId('mva-list')
+      const items = within(list).getAllByRole('listitem')
+      expect(items).toHaveLength(2)
+      expect(items[0]).toHaveTextContent('DX1โมเดล Model 81จริง Actual 810') // oldest first, like the plot
+      expect(items[1]).toHaveTextContent(/^DX2/)
+      expect(screen.queryByRole('list', { name: /Legend|คำอธิบาย/ })).toBeNull()
+      expect(cells(screen.getByTestId('table-mva'))).toHaveLength(2)
     })
 
     it('hidden in the empty state, and no chart requests are made', async () => {

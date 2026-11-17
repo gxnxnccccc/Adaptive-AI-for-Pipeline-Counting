@@ -20,12 +20,12 @@ export default function PhotoStrip({ photos, edits, urls, selectedId, onSelect }
     <div className="px-4 pb-4">
       <span className="font-mono text-xs font-medium tracking-[.08em] text-tx-3 uppercase">{bi(t.allPhotos)}</span>
       <ul className="m-0 mt-2 flex list-none snap-x snap-proximity gap-2.5 overflow-x-auto p-0.5">
-        {photos.map((p) => {
+        {photos.map((p, i) => {
           const failed = !!p.result.error
           const e = edits[p.id]
           const edited = !failed && hasEdits(e)
           const n = correctedCount(p.result.count, e)
-          const label = [p.original.name, failed ? bi(t.failedShort) : `${n} ${bi(t.pipesUnit)}`, edited && bi(t.edited)]
+          const label = [`${bi(t.photoNofM(i + 1, photos.length))}: ${p.original.name}`, failed ? bi(t.failedShort) : `${n} ${bi(t.pipesUnit)}`, edited && bi(t.edited)]
             .filter(Boolean)
             .join(', ')
           return (
@@ -51,6 +51,14 @@ export default function PhotoStrip({ photos, edits, urls, selectedId, onSelect }
                     />
                   )}
                   {failed && <span aria-hidden="true" className="absolute inset-0 bg-err/40" />}
+                  {/* Photo number: two photos with the same name (pipes.jpg twice) are still told apart. */}
+                  <span
+                    data-testid="thumb-num"
+                    aria-hidden="true"
+                    className="absolute top-1 left-1 grid h-[22px] min-w-[22px] place-items-center rounded-full bg-tx/80 px-1.5 font-mono text-xs font-semibold text-surface tabular-nums"
+                  >
+                    {i + 1}
+                  </span>
                   {edited && (
                     <span
                       data-testid="edited-badge"

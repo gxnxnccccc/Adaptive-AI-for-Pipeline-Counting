@@ -45,6 +45,9 @@ export function warnings(q: Quality | undefined): Warning[] {
 
 const Spinner = () => <LoaderCircle aria-hidden="true" className="size-4 shrink-0 motion-safe:animate-spin" />
 
+// Below this, "3.0 MB → 2.8 MB −6%" says nothing useful.
+export const MIN_SAVING_PCT = 20
+
 function SizeLine({ row }: { row: QueueRow }) {
   const cls = 'font-mono text-sm text-tx-2 tabular-nums'
   const orig = formatBytes(row.original.size)
@@ -62,10 +65,17 @@ function SizeLine({ row }: { row: QueueRow }) {
     )
   const { originalBytes, uploadBytes } = row.prep
   const pct = Math.round((1 - uploadBytes / originalBytes) * 100)
+  // A small saving is noise: show just the size that will be sent.
+  if (pct < MIN_SAVING_PCT)
+    return (
+      <span data-size className={cls}>
+        {formatBytes(uploadBytes)}
+      </span>
+    )
   return (
     <span data-size title={bi(t.sizeTitle)} className={cls}>
       {formatBytes(originalBytes)} <span className="text-tx-3">→</span> {formatBytes(uploadBytes)}
-      {pct > 0 && <span className="text-ok"> −{pct}%</span>}
+      <span className="text-ok"> −{pct}%</span>
     </span>
   )
 }

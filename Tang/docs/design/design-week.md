@@ -6,11 +6,13 @@ Figma file: "SPDS · Design Week (hi-fi)" (created, still empty: the upload from
 
 Tag: **Demo** = before 30 Nov. **Later** = backlog.
 
+**8 screen specs (2026-11-17):** `screens/01-login.md` … `screens/08-dashboard.md`. The 4 extra screens (Upload status, Correct, Confirm, History) are states inside the 4 pages, so they have screenshots (`img/spec-0*.png`), not new pages. Figma: skipped (Tang 2026-11-17, specs only).
+
 ## 01 Login
 | What to fix |
 |---|
-| Crew sits low, empty gap under the tagline at 1440x900: centre it or scale it up |
-| Build stamp under the card reads like debug text: smaller, hide in the final demo build |
+| Crew sits low, empty gap under the tagline at 1440x900: centre it or scale it up ✅ built (top trimmed, 720 px) |
+| Build stamp under the card reads like debug text: smaller, hide in the final demo build ✅ built (10 px corner, live app only) |
 | Big empty grey area right of the card: recheck on the projector |
 
 | Function to add | When |
@@ -23,9 +25,9 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 ## 02 Processing
 | What to fix |
 |---|
-| Same photo can be added twice: warn on duplicates |
-| Desktop uses only a narrow centre column: tips or last batch on the right |
-| Compression line shows even for a tiny saving (-6%): show it only when it matters |
+| Same photo can be added twice: warn on duplicates ✅ built (skipped + "Skipped 1 photo already in the list") |
+| Desktop uses only a narrow centre column: tips or last batch on the right ✅ built (tips card) |
+| Compression line shows even for a tiny saving (-6%): show it only when it matters ✅ built (20% or more) |
 
 | Function to add | When |
 |---|---|
@@ -37,9 +39,9 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 ## 03 Result
 | What to fix |
 |---|
-| 18 low-confidence boxes all dashed orange = noisy: "show only boxes to check" ✅ built (tap the to-check chip) + "next box" (Later) |
-| Thumbnail strip shows "pipes" twice: add the photo number |
-| Two red buttons (Remove photo, Cancel detection) compete with Submit: Cancel as a quiet text link |
+| 18 low-confidence boxes all dashed orange = noisy: "show only boxes to check" ✅ built (tap the to-check chip) + "next box" ✅ built (N) |
+| Thumbnail strip shows "pipes" twice: add the photo number ✅ built |
+| Two red buttons (Remove photo, Cancel detection) compete with Submit: Cancel as a quiet text link ✅ built |
 
 | Function to add | When |
 |---|---|
@@ -52,9 +54,9 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 ## 04 Dashboard
 | What to fix |
 |---|
-| KPI cards have no change vs yesterday: add a delta (already in backlog) |
-| Model vs actual with 1 batch looks odd (axis 40-80, lone "0"): simple list under 3 batches |
-| Draft rows show "—" for DO: "Not confirmed yet" |
+| KPI cards have no change vs yesterday: add a delta (already in backlog) → Later (Tang 2026-11-17) |
+| Model vs actual with 1 batch looks odd (axis 40-80, lone "0"): simple list under 3 batches ✅ built |
+| Draft rows show "—" for DO: "Not confirmed yet" ✅ built |
 
 | Function to add | When |
 |---|---|
@@ -64,3 +66,4 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 | Model accuracy over time | Later |
 
 Tang picked 3 Demo items (2026-11-16): Caps Lock, show only boxes to check, Export CSV. The other 6 Demo items were built on 2026-11-17: all Demo items done.
+What to fix (2026-11-17): all built except the projector check (Tang) and the KPI delta (Later, Tang's choice).

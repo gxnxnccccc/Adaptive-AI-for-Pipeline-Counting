@@ -31,6 +31,11 @@ export const t = {
     th: `${name} ใหญ่เกิน ${mb} MB`,
     en: `${name} is over ${mb} MB`,
   }),
+  photoNofM: (i: number, n: number): Pair => ({ th: `รูปที่ ${i}/${n}`, en: `Photo ${i} of ${n}` }),
+  dupSkipped: (n: number): Pair => ({
+    th: `ข้าม ${n} รูปที่อยู่ในรายการแล้ว`,
+    en: `Skipped ${n} photo${n === 1 ? '' : 's'} already in the list`,
+  }),
   notImage: (name: string): Pair => ({ th: `${name} ไม่ใช่ไฟล์รูป`, en: `${name} is not an image` }),
   noResult: { th: 'ไม่มีผลจากเซิร์ฟเวอร์', en: 'No result from server' },
 

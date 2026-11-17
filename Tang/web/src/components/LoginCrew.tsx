@@ -236,7 +236,8 @@ export default function LoginCrew({
 
   return (
     <svg
-      viewBox="-24 -16 668 466"
+      // Top trimmed to the tallest member minus the 38 px jump: no empty band under the tagline (design-week 01).
+      viewBox="-24 48 668 402"
       aria-hidden="true"
       data-testid="crew"
       data-mood={mood}

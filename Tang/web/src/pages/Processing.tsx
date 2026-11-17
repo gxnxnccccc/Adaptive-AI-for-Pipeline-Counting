@@ -32,6 +32,8 @@ const Spin = () => <LoaderCircle aria-hidden="true" className="size-5 motion-saf
 
 type Ready = QueueRow & { prep: Prepared }
 const isReady = (r: QueueRow): r is Ready => r.status === 'ready' && !!r.prep
+// Same name + size + last-modified time = the same photo picked again.
+const fileKey = (f: File) => `${f.name}|${f.size}|${f.lastModified}`
 const isPreparing = (r: QueueRow) => r.status === 'queued' || r.status === 'checking' || r.status === 'compressing'
 
 export default function Processing() {
@@ -45,6 +47,8 @@ export default function Processing() {
 
   const [rows, setRows] = useState<QueueRow[]>([])
   const [notices, setNotices] = useState<string[]>([])
+  // Photos skipped because the same file is already in the list (not an error, so not in `notices`).
+  const [dupes, setDupes] = useState(0)
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -70,7 +74,15 @@ export default function Processing() {
   function addFiles(files: File[]) {
     const msgs: string[] = []
     const ok: File[] = []
+    const seen = new Set(rows.map((r) => fileKey(r.original)))
+    let skipped = 0
     for (const f of files) {
+      // Same file twice (picked again, or twice in one drop): skip it, so it is not counted twice.
+      if (seen.has(fileKey(f))) {
+        skipped++
+        continue
+      }
+      seen.add(fileKey(f))
       // `accept` is not enforced on drag and drop, so check here too.
       if (!f.type.startsWith('image/')) msgs.push(bi(t.notImage(f.name)))
       else if (f.size > MAX_FILE_BYTES) msgs.push(bi(t.tooBig(f.name, MAX_FILE_MB)))
@@ -87,6 +99,7 @@ export default function Processing() {
     })
     setRows((prev) => [...prev, ...added])
     setNotices(msgs)
+    setDupes(skipped)
 
     for (const r of added) {
       chain.current = chain.current.then(async () => {
@@ -108,6 +121,7 @@ export default function Processing() {
     live.current.delete(id)
     setRows((prev) => prev.filter((r) => r.id !== id))
     setNotices([])
+    setDupes(0)
   }
 
   const busy = phase === 'running' || phase === 'done'
@@ -309,6 +323,13 @@ export default function Processing() {
                 ))}
               </div>
             </div>
+          )}
+
+          {dupes > 0 && (
+            <p role="status" data-testid="dupes" className="flex items-start gap-2 text-sm text-tx-2">
+              <Info aria-hidden="true" className="mt-px size-4 shrink-0 text-accent-hi" />
+              <span>{bi(t.dupSkipped(dupes))}</span>
+            </p>
           )}
 
           {rows.length > 0 && (

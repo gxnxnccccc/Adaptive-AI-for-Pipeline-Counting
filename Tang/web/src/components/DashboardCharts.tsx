@@ -315,6 +315,29 @@ function ModelVsActual({ rows }: { rows: MvaRow[] }) {
   )
 }
 
+// 1-2 batches: a plot with a 40-80 axis and a lone "0" says less than plain numbers.
+const MIN_PLOT_ROWS = 3
+function MvaList({ rows }: { rows: MvaRow[] }) {
+  return (
+    <ul data-testid="mva-list" className="m-0 flex list-none flex-col gap-2 p-0 pt-1">
+      {rows.map((r) => (
+        <li key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-control bg-raised px-3 py-2.5">
+          <span className="font-mono text-sm font-semibold">{r.label}</span>
+          <span className="flex flex-wrap items-baseline gap-x-3 text-sm">
+            <span>
+              {t.colModel.th} <En>{t.colModel.en}</En> <b className="font-mono tabular-nums">{r.model}</b>
+            </span>
+            <span>
+              {t.colActual.th} <En>{t.colActual.en}</En> <b className="font-mono tabular-nums">{r.actual}</b>
+            </span>
+            <span className={cn('font-mono tabular-nums', r.diff ? 'font-bold' : 'text-tx-3')}>{r.diffLabel}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 // Recharts animation off under prefers-reduced-motion.
 function useAnimate() {
   const [animate] = useState(() => !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
@@ -361,7 +384,7 @@ export default function DashboardCharts({ days, confirmed }: { days: DailyStat[]
         id="c-mva"
         title={t.chartMva}
         legend={
-          rows.length > 0 && (
+          rows.length >= MIN_PLOT_ROWS && (
             <ul aria-label={bi(t.legend)} className="flex flex-wrap gap-x-4 gap-y-1 px-4 pt-1 text-[13px] text-tx-2">
               <li className="flex items-center gap-1.5">
                 <span aria-hidden="true" className="size-3.5 rounded-full border-[2.5px] border-viz-1" />
@@ -384,8 +407,10 @@ export default function DashboardCharts({ days, confirmed }: { days: DailyStat[]
           )
         }
       >
-        {rows.length > 0 ? (
+        {rows.length >= MIN_PLOT_ROWS ? (
           <ModelVsActual rows={rows} />
+        ) : rows.length > 0 ? (
+          <MvaList rows={rows} />
         ) : (
           <p data-testid="mva-empty" className="flex min-h-[120px] items-center justify-center px-2 text-sm text-tx-3">
             {bi(t.nothingConfirmed)}

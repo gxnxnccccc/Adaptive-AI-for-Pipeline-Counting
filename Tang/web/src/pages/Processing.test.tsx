@@ -182,6 +182,33 @@ describe('Processing queue: prepare', () => {
     expect(alert).toHaveTextContent(/notes\.txt is not an image/)
   })
 
+  it('skips a photo that is already in the list (picked again, or twice in one pick) and says so', async () => {
+    const user = renderPage()
+    const [a, b] = photos(2)
+    await addReady(user, [a])
+    expect(screen.queryByTestId('dupes')).toBeNull()
+
+    await user.upload(pick(), [a, b, b])
+    await waitFor(() => expect(readyRows()).toHaveLength(2))
+    expect(rows().map((r) => within(r).getByTitle(/IMG_/).textContent)).toEqual(['IMG_1.jpg', 'IMG_2.jpg'])
+    expect(screen.getByTestId('dupes')).toHaveTextContent('Skipped 2 photos already in the list')
+    expect(screen.queryByRole('alert')).toBeNull() // not an error
+
+    // A photo with the same name but a different file is not a duplicate.
+    await user.upload(pick(), [photo('IMG_1.jpg', 2 * MB)])
+    await waitFor(() => expect(readyRows()).toHaveLength(3))
+    expect(screen.queryByTestId('dupes')).toBeNull()
+  })
+
+  it('a small saving shows only the size that will be sent', async () => {
+    mockCompress.mockImplementation((file: File) =>
+      Promise.resolve({ file, originalBytes: file.size, compressedBytes: 2.85 * MB, width: 800, height: 600 }),
+    )
+    const user = renderPage()
+    await addReady(user, photos(1))
+    expect(size(rows()[0])).toHaveTextContent(/^2\.9 MB$/)
+  })
+
   it('remove drops the row and revokes its thumbnail URL', async () => {
     const user = renderPage()
     await addReady(user, photos(3))
