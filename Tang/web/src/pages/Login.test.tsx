@@ -28,6 +28,8 @@ function renderLogin() {
 const idField = () => screen.getByLabelText(/รหัสพนักงาน/)
 const pwField = () => screen.getByLabelText(/^รหัสผ่าน/)
 const signInBtn = () => screen.getByRole('button', { name: /เข้าสู่ระบบ.*Sign in/ })
+// A correct login first plays the crew's jump (WELCOME_MS), then opens /processing.
+const landsOnProcessing = () => waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent('/processing'), { timeout: 3000 })
 const eye = () => screen.getByRole('button', { name: /password/ })
 
 beforeEach(() => {
@@ -86,8 +88,35 @@ describe('Login', () => {
     await user.type(idField(), 'OP-7')
     await user.type(pwField(), 'spds')
     await user.click(signInBtn())
-    expect(screen.getByTestId('path')).toHaveTextContent('/processing')
+    await landsOnProcessing()
     expect(localStorage.getItem('spds.operator')).toBe('OP-7')
+  })
+
+  it('correct password: the crew jumps and the button says Welcome, then it signs in and opens /processing', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    await user.type(idField(), 'OP-7')
+    await user.type(pwField(), 'spds')
+    await user.click(signInBtn())
+    // Not signed in yet: login() remounts the app (session keyed by operator), which would cut the jump short.
+    expect(localStorage.getItem('spds.operator')).toBeNull()
+    expect(screen.getByTestId('crew')).toHaveAttribute('data-mood', 'happy')
+    expect(screen.getByRole('button', { name: /ยินดีต้อนรับ.*Welcome/ })).toBeInTheDocument()
+    expect(screen.getByTestId('welcome-status')).toHaveTextContent('Welcome')
+    expect(screen.getByTestId('path')).toHaveTextContent('/login')
+    await landsOnProcessing()
+    expect(localStorage.getItem('spds.operator')).toBe('OP-7')
+  })
+
+  it('reduced motion: no jump, straight to /processing', async () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce'), addEventListener() {}, removeEventListener() {} }))
+    const user = userEvent.setup()
+    renderLogin()
+    await user.type(idField(), 'OP-7')
+    await user.type(pwField(), 'spds')
+    await user.click(signInBtn())
+    expect(screen.getByTestId('path')).toHaveTextContent('/processing')
+    vi.unstubAllGlobals()
   })
 
   it('keep me signed in off uses sessionStorage', async () => {
@@ -97,7 +126,7 @@ describe('Login', () => {
     await user.type(idField(), 'OP-7')
     await user.type(pwField(), 'spds')
     await user.click(signInBtn())
-    expect(screen.getByTestId('path')).toHaveTextContent('/processing')
+    await landsOnProcessing()
     expect(sessionStorage.getItem('spds.operator')).toBe('OP-7')
     expect(localStorage.getItem('spds.operator')).toBeNull()
   })
@@ -126,7 +155,7 @@ describe('Login', () => {
     await user.type(idField(), 'OP-7')
     await user.type(pwField(), 'spds')
     await user.click(signInBtn())
-    expect(screen.getByTestId('path')).toHaveTextContent('/processing')
+    await landsOnProcessing()
   })
 
   it('Check again re-checks /health: chip shows checking, then the new result', async () => {

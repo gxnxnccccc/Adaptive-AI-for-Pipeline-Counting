@@ -5,8 +5,9 @@ import { useEffect, useState, type ReactNode } from 'react'
 // Game 165, Guy 165 cm (exaggerated so the difference reads). Motion lives in index.css (.crew).
 //
 // mood: idle = look at the viewer; watch = lean toward the form, eyes follow the text;
-// away = password shown, they turn away; wrong = lean back + head shake (replays on every `wrongKey`).
-export type CrewMood = 'idle' | 'watch' | 'away' | 'wrong'
+// away = password shown, they turn away; wrong = lean back + head shake (replays on every `wrongKey`);
+// happy = correct password: they jump once, one after another, before the app opens.
+export type CrewMood = 'idle' | 'watch' | 'away' | 'wrong' | 'happy'
 
 const GROUND = 400
 const INK = '#0a1a4a'
@@ -201,7 +202,7 @@ function Character({ m, i }: { m: Member; i: number }) {
   )
 }
 
-const prefersReducedMotion = () =>
+export const prefersReducedMotion = () =>
   typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 type Phase = 'letters' | 'morph' | 'ready'

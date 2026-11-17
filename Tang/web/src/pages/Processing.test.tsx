@@ -196,7 +196,11 @@ describe('Processing queue: prepare', () => {
     mockQuality.mockResolvedValueOnce(OK).mockResolvedValueOnce({ brightness: 'dark', blur: 'ok' }).mockResolvedValueOnce({ brightness: 'ok', blur: 'blurry' })
     const user = renderPage()
     await addReady(user, photos(3))
-    const [, r2, r3] = rows()
+    const [r1, r2, r3] = rows()
+    // Clean photo: a green OK chip; photos with a warning get no OK chip.
+    expect(within(r1).getByTestId('photo-ok')).toHaveTextContent('Photo OK')
+    expect(within(r2).queryByTestId('photo-ok')).toBeNull()
+    expect(within(r3).queryByTestId('photo-ok')).toBeNull()
     expect(within(r2).getByText(/Too dark, retake with more light/)).toBeInTheDocument()
     expect(within(r3).getByText(/Blurry/)).toBeInTheDocument()
     expect(cta()).toBeEnabled()

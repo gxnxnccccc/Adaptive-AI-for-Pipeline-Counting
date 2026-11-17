@@ -15,6 +15,7 @@ import {
   createLucideIcon,
   type LucideIcon,
 } from 'lucide-react'
+import BatchDialog from '@/components/BatchDialog'
 import { Button } from '@/components/ui/button'
 import { getDailyStats, getStats, listRecords, type DailyStat, type RecordRow, type Stats } from '@/lib/api'
 import { formatVariance } from '@/lib/confirm'
@@ -183,7 +184,9 @@ const COLS: { p: Pair; right?: boolean }[] = [
 const Label = ({ p }: { p: Pair }) => <span className="font-sans text-xs text-tx-3 @min-[760px]:hidden">{bi(p)}</span>
 
 // Table on wide cards; below 760 px each row becomes a 3-column card with its own labels (preview .recent).
+// A row click (or Enter/Space on its DO button) opens that batch's details.
 function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
+  const [open, setOpen] = useState<RecordRow | null>(null)
   const dash = <span className="text-tx-3">{DASH}</span>
   const td = 'flex flex-col @min-[760px]:table-cell @min-[760px]:border-b @min-[760px]:border-line @min-[760px]:px-2.5 @min-[760px]:py-2.5 @min-[760px]:align-middle'
   const num = 'font-mono tabular-nums @min-[760px]:text-right'
@@ -208,7 +211,9 @@ function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
           <tr
             key={r.batchId}
             data-testid="recent-row"
-            className="grid grid-cols-3 gap-x-2 gap-y-1.5 border-b border-line py-3 hover:bg-raised/50 @min-[760px]:table-row @min-[760px]:border-0 @min-[760px]:py-0"
+            // Mouse shortcut for the whole row; the DO button below is the keyboard / screen-reader way in.
+            onClick={() => setOpen(r)}
+            className="grid cursor-pointer grid-cols-3 gap-x-2 gap-y-1.5 border-b border-line py-3 hover:bg-raised/50 @min-[760px]:table-row @min-[760px]:border-0 @min-[760px]:py-0"
           >
             <td className={cn(td, 'font-mono tabular-nums')}>
               <Label p={t.colTime} />
@@ -216,7 +221,17 @@ function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
             </td>
             <td data-testid="recent-do" className={cn(td, 'col-span-2 font-mono text-base font-bold @min-[760px]:text-sm')}>
               <Label p={t.doNumber} />
-              {r.doNumber ?? dash}
+              <button
+                type="button"
+                aria-label={bi(t.openBatch(r.doNumber ?? bi(t.notConfirmedYet)))}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpen(r)
+                }}
+                className="w-fit cursor-pointer text-left underline decoration-line-2 underline-offset-4 hover:decoration-accent"
+              >
+                {r.doNumber ?? dash}
+              </button>
             </td>
             <td className={cn(td, 'font-mono')}>
               <Label p={t.colOperator} />
@@ -244,6 +259,7 @@ function RecentTable({ rows, now }: { rows: RecordRow[]; now: Date }) {
           </tr>
         ))}
       </tbody>
+      {open && <BatchDialog r={open} status={<StatusChip r={open} />} onClose={() => setOpen(null)} />}
     </table>
   )
 }

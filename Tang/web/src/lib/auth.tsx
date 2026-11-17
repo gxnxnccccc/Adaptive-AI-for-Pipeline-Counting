@@ -5,6 +5,9 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 const KEY = 'spds.operator'
 export const DEMO_PASSWORD = 'spds'
+
+// Same rule login() applies, without signing in (Login checks first, then plays the crew's jump).
+export const isValidLogin = (operatorId: string, password: string) => !!operatorId.trim() && password === DEMO_PASSWORD
 type StoreName = 'localStorage' | 'sessionStorage'
 
 // Storage can throw (private mode, blocked site data), so every access is wrapped.
@@ -37,8 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [operator, setOperator] = useState<string | null>(() => read('localStorage') ?? read('sessionStorage'))
 
   const login = useCallback((operatorId: string, password: string, keep = true) => {
+    if (!isValidLogin(operatorId, password)) return false
     const id = operatorId.trim()
-    if (!id || password !== DEMO_PASSWORD) return false
     // "Keep me signed in" = localStorage, otherwise this tab only.
     write('localStorage', keep ? id : null)
     write('sessionStorage', keep ? null : id)

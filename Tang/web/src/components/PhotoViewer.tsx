@@ -1,7 +1,8 @@
-import type { MouseEvent } from 'react'
+import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react'
 import type { Point, PhotoEdits } from '@/lib/corrections'
 import { toRect, type Box, type DetectedPipe } from '@/lib/detection'
 import { bi, t, type Pair } from '@/lib/i18n'
+import { panBy, zoomAt, zoomedViewBox, type Zoom } from '@/lib/zoom'
 
 export type View = 'crop' | 'full'
 type Rect = { left: number; top: number; width: number; height: number }
@@ -47,7 +48,15 @@ type Props = {
   // "Show only boxes to check": confident boxes fade out (still there and still tappable), so the
   // low-confidence ones stand out. Faded, not hidden, so a tap never hits a box you can't see.
   focusLow?: boolean
+  // Zoom inside the current view (crop or full). With onZoom: drag pans, Ctrl/⌘ + wheel or a trackpad pinch zooms.
+  zoom?: Zoom | null
+  onZoom?: (z: Zoom | null) => void
+  // Model box index to point out ("next box to check", key N).
+  current?: number | null
 }
+
+// A drag shorter than this (screen px) is still a tap.
+const DRAG_PX = 4
 
 const BASE = 'box fill-transparent [vector-effect:non-scaling-stroke]'
 const STYLE = {
@@ -71,14 +80,67 @@ export default function PhotoViewer({
   onPick,
   readOnly = false,
   focusLow = false,
+  zoom = null,
+  onZoom,
+  current = null,
 }: Props) {
-  const vb = viewBoxFor(view, cropBox, width, height)
+  const base = viewBoxFor(view, cropBox, width, height)
+  const vb = zoomedViewBox(base, zoom)
   const removed = new Set(edits?.removed)
   const stroke = readOnly ? 1 : 2
   const live = !readOnly && !!onPick
   const hover = live ? 'cursor-pointer motion-safe:transition-[stroke-width] hover:[stroke-width:4]' : ''
 
+  const svgRef = useRef<SVGSVGElement>(null)
+  const zoomed = !!zoom && zoom.scale > 1
+  // Pan: the pointer that went down, the zoom it started from, and whether it moved far enough to be a drag.
+  const drag = useRef<{ id: number; x: number; y: number; from: Zoom; moved: boolean } | null>(null)
+  const swallowClick = useRef(false)
+
+  // Screen px per image px for the current view (letterboxed "meet").
+  const pxPerUnit = (r: DOMRect) => Math.min(r.width / vb[2], r.height / vb[3])
+
+  function pointerDown(e: PointerEvent<SVGSVGElement>) {
+    if (!onZoom || !zoomed || e.button !== 0) return
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, from: zoom, moved: false }
+  }
+  function pointerMove(e: PointerEvent<SVGSVGElement>) {
+    const d = drag.current
+    if (!d || d.id !== e.pointerId || !onZoom) return
+    const dx = e.clientX - d.x
+    const dy = e.clientY - d.y
+    if (!d.moved && Math.hypot(dx, dy) < DRAG_PX) return
+    if (!d.moved) e.currentTarget.setPointerCapture?.(e.pointerId)
+    d.moved = true
+    const s = pxPerUnit(e.currentTarget.getBoundingClientRect())
+    onZoom(panBy(base, d.from, dx / s, dy / s))
+  }
+  function pointerUp(e: PointerEvent<SVGSVGElement>) {
+    if (drag.current?.id !== e.pointerId) return
+    swallowClick.current = drag.current.moved // the click that follows a drag is not a tap
+    drag.current = null
+  }
+
+  // Ctrl/⌘ + wheel (also what a trackpad pinch sends) zooms around the cursor. Native listener: React's is passive.
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || !onZoom) return
+    const wheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return // plain wheel scrolls the page
+      e.preventDefault()
+      const pt = toImagePoint(e.clientX, e.clientY, el.getBoundingClientRect(), vb)
+      const next = zoomAt(base, vb, pt, (zoom?.scale ?? 1) * Math.exp(-e.deltaY / 300))
+      onZoom(next.scale <= 1 ? null : next)
+    }
+    el.addEventListener('wheel', wheel, { passive: false })
+    return () => el.removeEventListener('wheel', wheel)
+  })
+
   function click(e: MouseEvent<SVGSVGElement>) {
+    if (swallowClick.current) {
+      swallowClick.current = false
+      return
+    }
     if (!live) return
     const p = toImagePoint(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect(), vb)
     if (p.x < 0 || p.y < 0 || p.x > width || p.y > height) return // letterbox bar, not the photo
@@ -87,10 +149,16 @@ export default function PhotoViewer({
 
   return (
     <svg
+      ref={svgRef}
       viewBox={vb.join(' ')}
       preserveAspectRatio="xMidYMid meet"
-      className={`block size-full select-none ${live ? 'cursor-crosshair' : ''}`}
+      // Zoomed: one-finger drag pans the photo instead of scrolling the page.
+      className={`block size-full select-none ${zoomed && onZoom ? 'touch-none active:cursor-grabbing' : ''} ${live ? 'cursor-crosshair' : ''}`}
       onClick={click}
+      onPointerDown={pointerDown}
+      onPointerMove={pointerMove}
+      onPointerUp={pointerUp}
+      onPointerCancel={pointerUp}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >
       <image href={src} x={0} y={0} width={width} height={height} />
@@ -114,6 +182,9 @@ export default function PhotoViewer({
           </g>
         )
       })}
+      {current != null && pipes[current] && (
+        <CurrentRing box={pipes[current].box} />
+      )}
       {edits?.added.map((b, j) => {
         const { x, y, w, h } = toRect(b)
         return (
@@ -130,6 +201,24 @@ export default function PhotoViewer({
         )
       })}
     </svg>
+  )
+}
+
+// Pink ring around the box picked by "next box to check", a little outside it so the box style stays visible.
+function CurrentRing({ box }: { box: Box }) {
+  const { x, y, w, h } = toRect(box)
+  const pad = Math.max(w, h) * 0.18
+  return (
+    <rect
+      data-testid="box-current"
+      x={x - pad}
+      y={y - pad}
+      width={w + 2 * pad}
+      height={h + 2 * pad}
+      rx={6}
+      strokeWidth={4}
+      className="pointer-events-none fill-transparent stroke-pink [vector-effect:non-scaling-stroke] motion-safe:animate-pulse"
+    />
   )
 }
 

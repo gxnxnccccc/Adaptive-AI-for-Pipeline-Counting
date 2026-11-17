@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import { Crop, Download, Eye, FileX, Info, Maximize, Trash2, TriangleAlert, Undo2 } from 'lucide-react'
+import { Crop, Download, Eye, FileX, Info, Maximize, Trash2, TriangleAlert, Undo2, ZoomIn, ZoomOut } from 'lucide-react'
 import ConfirmPanel, { type ConfirmSubmit } from '@/components/ConfirmPanel'
 import PhotoStrip from '@/components/PhotoStrip'
-import PhotoViewer, { BoxLegend, type View } from '@/components/PhotoViewer'
+import PhotoViewer, { BoxLegend, viewBoxFor, type View } from '@/components/PhotoViewer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { downloadBlob, renderAnnotatedPng } from '@/lib/annotate'
@@ -25,6 +25,7 @@ import {
 import { useDetectionSession, type SessionPhoto } from '@/lib/detection-session'
 import { bi, t, type Pair } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { MAX_ZOOM, nextScale, zoomAt, zoomToBox, zoomedViewBox, type Zoom } from '@/lib/zoom'
 
 // One object URL per upload file (the boxes are in its pixel space), revoked when the photos change or on unmount.
 function useUploadUrls(photos: SessionPhoto[]): Record<string, string> {
@@ -58,6 +59,40 @@ function Bi({ p, className }: { p: Pair; className?: string }) {
   )
 }
 
+// Keyboard shortcuts by physical key (e.code), so they also work on the Thai layout (Z types "ผ" there).
+// Ignored while typing in a field or with Ctrl/⌘/Alt held (Ctrl+Z in the notes box stays the browser's own undo).
+function Shortcuts({ keys }: { keys: Record<string, (() => void) | null> }) {
+  const latest = useRef(keys)
+  useEffect(() => {
+    latest.current = keys
+  })
+  useEffect(() => {
+    function down(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      const el = e.target as HTMLElement | null
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return
+      const run = latest.current[e.code]
+      if (!run) return
+      e.preventDefault()
+      run()
+    }
+    window.addEventListener('keydown', down)
+    return () => window.removeEventListener('keydown', down)
+  }, [])
+  return null
+}
+
+function Kbd({ k }: { k: string }) {
+  return (
+    <kbd className="rounded-[5px] border border-line-2 bg-surface px-1.5 font-mono text-[11px] font-semibold text-tx shadow-[0_1px_0_var(--color-line-2)]">
+      {k}
+    </kbd>
+  )
+}
+
+const ZOOM_BTN =
+  'grid size-11 cursor-pointer place-items-center rounded-[9px] text-tx-2 hover:bg-raised hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent'
+
 const VIEWS: { v: View; icon: typeof Crop; text: Pair }[] = [
   { v: 'crop', icon: Crop, text: t.viewCrop },
   { v: 'full', icon: Maximize, text: t.viewFull },
@@ -69,6 +104,9 @@ export default function Result() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [view, setView] = useState<View>('crop')
   const [focusLow, setFocusLow] = useState(false)
+  // Zoom + "next box to check" belong to one photo in one view: both reset when either changes.
+  const [zoom, setZoom] = useState<Zoom | null>(null)
+  const [current, setCurrent] = useState<number | null>(null)
   const [msg, setMsg] = useState<{ text: string; err?: boolean } | null>(null)
   // Submit in flight: the viewer and its actions are locked.
   const [locked, setLocked] = useState(false)
@@ -105,8 +143,14 @@ export default function Result() {
     <ConfirmPanel photos={photos} edits={edits} onSubmit={submit} onCancel={restart} onBusyChange={setLocked} />
   )
 
+  function resetZoom() {
+    setZoom(null)
+    setCurrent(null)
+  }
+
   function select(id: string) {
     setSelectedId(id)
+    resetZoom()
     setMsg(null) // a download / remove message belongs to the photo it was about
   }
 
@@ -126,6 +170,32 @@ export default function Result() {
   const removed = new Set(e.removed)
   const toCheck = p.result.pipes.filter((x, i) => x.lowConfidence && !removed.has(i)).length
   const name = p.original.name
+  const canEdit = !failed && !locked
+  const canUndo = canEdit && e.history.length > 0
+
+  // Model boxes still to check, in detection order; N walks through them (and wraps).
+  const lowList = p.result.pipes.flatMap((x, i) => (x.lowConfidence && !removed.has(i) ? [i] : []))
+  const pos = current == null ? -1 : lowList.indexOf(current)
+  const base = viewBoxFor(failed ? 'full' : view, p.result.cropBox, p.width, p.height)
+  const scale = zoom?.scale ?? 1
+
+  function nextToCheck() {
+    if (!canEdit || lowList.length === 0) return
+    const i = lowList.find((j) => current == null || j > current) ?? lowList[0]
+    setCurrent(i)
+    setZoom(zoomToBox(base, p.result.pipes[i].box, 3))
+  }
+
+  function zoomBy(dir: 1 | -1) {
+    const vb = zoomedViewBox(base, zoom)
+    const z = zoomAt(base, vb, { x: vb[0] + vb[2] / 2, y: vb[1] + vb[3] / 2 }, nextScale(scale, dir))
+    setZoom(z.scale <= 1 ? null : z)
+  }
+
+  function changeView(v: View) {
+    setView(v)
+    resetZoom()
+  }
 
   async function saveResult() {
     setMsg(null)
@@ -147,6 +217,7 @@ export default function Result() {
     const next = photos[index + 1] ?? photos[index - 1]
     removePhoto(p.id)
     setSelectedId(next?.id ?? null)
+    resetZoom()
     setMsg({ text: bi(t.photoRemoved) })
   }
 
@@ -200,7 +271,7 @@ export default function Result() {
                   key={v}
                   type="button"
                   aria-pressed={view === v}
-                  onClick={() => setView(v)}
+                  onClick={() => changeView(v)}
                   className="group flex min-h-11 cursor-pointer items-center gap-2 rounded-[9px] px-2 text-sm font-semibold text-tx-2 aria-pressed:bg-raised aria-pressed:text-tx aria-pressed:shadow-[inset_0_0_0_1px_var(--color-line-2)] sm:px-3"
                 >
                   <Icon aria-hidden="true" className="size-4 group-aria-pressed:text-accent" />
@@ -232,7 +303,40 @@ export default function Result() {
               onPick={failed || locked ? undefined : (pt) => setEdits(p.id, applyPick(p, e, pt))}
               readOnly={failed || locked}
               focusLow={focusLow && toCheck > 0}
+              zoom={zoom}
+              onZoom={canEdit ? (z) => setZoom(z) : undefined}
+              current={current}
             />
+          )}
+          {!failed && (
+            <div
+              role="group"
+              aria-label={bi(t.zoom)}
+              className="absolute right-3 bottom-3 z-[1] flex items-center rounded-xl border border-line bg-surface/90 p-[3px] shadow-sm backdrop-blur-sm"
+            >
+              <button type="button" className={ZOOM_BTN} aria-label={bi(t.zoomOut)} disabled={locked || !zoom} onClick={() => zoomBy(-1)}>
+                <ZoomOut aria-hidden="true" className="size-5" />
+              </button>
+              <button
+                type="button"
+                data-testid="zoom-level"
+                className={cn(ZOOM_BTN, 'w-14 font-mono text-xs font-semibold tabular-nums')}
+                aria-label={`${bi(t.zoomReset)} (${Math.round(scale * 100)}%)`}
+                disabled={locked || !zoom}
+                onClick={resetZoom}
+              >
+                {Math.round(scale * 100)}%
+              </button>
+              <button
+                type="button"
+                className={ZOOM_BTN}
+                aria-label={bi(t.zoomIn)}
+                disabled={locked || scale >= MAX_ZOOM}
+                onClick={() => zoomBy(1)}
+              >
+                <ZoomIn aria-hidden="true" className="size-5" />
+              </button>
+            </div>
           )}
           <div aria-hidden="true" className="pointer-events-none absolute inset-2">
             <i className="absolute top-0 left-0 size-5 border-t-2 border-l-2 border-accent opacity-80" />
@@ -267,12 +371,36 @@ export default function Result() {
               <Bi p={t.tapHelp} />
             </p>
           )}
-          <Button variant="secondary" disabled={locked || failed || e.history.length === 0} onClick={() => setEdits(p.id, undo(e))}>
+          <Button variant="secondary" disabled={!canUndo} onClick={() => setEdits(p.id, undo(e))}>
             <Undo2 aria-hidden="true" className="size-5" />
             <span>{t.undo.th}</span>
             <span className="text-xs font-normal text-tx-3">{t.undo.en}</span>
           </Button>
         </div>
+        {!failed && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pt-2 text-xs text-tx-3">
+            {/* Mouse/keyboard devices only: a phone has no Z / N keys. */}
+            <p className="hidden items-center gap-1.5 pointer-fine:flex">
+              <span className="font-semibold text-tx-2">{bi(t.shortcuts)}:</span>
+              <Kbd k="Z" /> {bi(t.keyUndo)}
+              {lowList.length > 0 && (
+                <>
+                  <span aria-hidden="true">·</span> <Kbd k="N" /> {bi(t.keyNext)}
+                </>
+              )}
+            </p>
+            {zoom && <p>{bi(t.dragToMove)}</p>}
+            <p role="status" data-testid="box-pos" className="font-semibold text-pink-ink empty:hidden">
+              {pos >= 0 ? bi(t.boxPos(pos + 1, lowList.length)) : ''}
+            </p>
+          </div>
+        )}
+        <Shortcuts
+          keys={{
+            KeyZ: canUndo ? () => setEdits(p.id, undo(e)) : null,
+            KeyN: canEdit && lowList.length > 0 ? nextToCheck : null,
+          }}
+        />
         <div className="px-4 pt-2.5 pb-1">
           <BoxLegend />
         </div>

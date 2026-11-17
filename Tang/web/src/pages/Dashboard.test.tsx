@@ -136,6 +136,33 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('kpi-failed-icon')).not.toHaveAttribute('data-alarm')
   })
 
+  it('row click / DO button opens the batch details; Esc and the backdrop close it, focus returns', async () => {
+    const user = userEvent.setup()
+    const items = [rec('b2', { do_number: 'DX2', actual_amount: 122, variance: 2, status: 'confirmed', flagged: true, notes: 'ซ่อน 2 ท่อ\nแถวหลัง', confirmed_at: new Date().toISOString() }), rec('b3')]
+    stubApi({ stats: wire(3, 2, 0.5, 0), items })
+    renderIt()
+    const rows = await screen.findAllByTestId('recent-row')
+    await user.click(within(rows[0]).getAllByRole('cell')[4]) // any cell: the Model column
+    const dlg = screen.getByRole('dialog', { name: /Batch details.*DX2/ })
+    expect(within(dlg).getByTestId('status-chip')).toHaveTextContent('Flagged')
+    expect(dlg).toHaveTextContent('+2')
+    expect(dlg).toHaveTextContent('ซ่อน 2 ท่อ')
+    expect(dlg).toHaveTextContent('b2')
+    expect(within(dlg).getByRole('button', { name: /Close/ })).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    // Keyboard way in: the DO button. A draft has no DO yet.
+    const open = within(rows[1]).getByRole('button', { name: /Open batch ยังไม่ยืนยัน/ })
+    open.focus()
+    await user.keyboard('{Enter}')
+    const draft = screen.getByRole('dialog', { name: /Not confirmed yet/ })
+    expect(draft).toHaveTextContent(/Actual.*—/)
+    await user.click(screen.getByTestId('batch-backdrop'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(open).toHaveFocus()
+  })
+
   it('negative variance keeps its sign', async () => {
     stubApi({ stats: wire(1, 1, 1, 0), items: [rec('b9', { do_number: 'DX9', actual_amount: 87, variance: -1, status: 'confirmed', flagged: true })] })
     renderIt()

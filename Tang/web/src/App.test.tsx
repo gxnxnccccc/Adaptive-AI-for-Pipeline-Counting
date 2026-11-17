@@ -56,7 +56,7 @@ describe('routes + auth', () => {
     const user = userEvent.setup()
     await renderAt('/')
     await signIn(user)
-    expect(await screen.findByRole('heading', { name: /ถ่าย \/ อัปโหลดรูป/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /ถ่าย \/ อัปโหลดรูป/ }, { timeout: 3000 })).toBeInTheDocument()
     expect(path()).toHaveTextContent('/processing')
     expect(localStorage.getItem('spds.operator')).toBe('OP-7')
   })

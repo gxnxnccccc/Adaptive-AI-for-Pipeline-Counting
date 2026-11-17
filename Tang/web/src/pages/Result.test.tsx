@@ -140,6 +140,73 @@ describe('Result viewer card', () => {
     expect(viewer().querySelectorAll('.box-faded')).toHaveLength(0)
   })
 
+  describe('zoom + shortcuts', () => {
+    const vb = () => viewer().getAttribute('viewBox')
+    const level = () => screen.getByTestId('zoom-level')
+    const key = (code: string, target: Element | Window = window) => fireEvent.keyDown(target, { code })
+
+    it('zoom buttons step 100 -> 150 -> 200 % and reset; taps still hit the right box when zoomed', async () => {
+      const user = userEvent.setup()
+      await openResult()
+      expect(level()).toHaveTextContent('100%')
+      expect(screen.getByRole('button', { name: /Zoom out/ })).toBeDisabled()
+      await user.click(screen.getByRole('button', { name: /Zoom in/ }))
+      expect(level()).toHaveTextContent('150%')
+      await user.click(screen.getByRole('button', { name: /Zoom in/ }))
+      expect(level()).toHaveTextContent('200%')
+      expect(vb()).toBe('25 25 50 50')
+      // Low box (50,10 20x20) at image (60, 27) = client ((60-25)*2, (27-25)*2) in the zoomed view.
+      tap(70, 4)
+      expect(count()).toHaveTextContent('1')
+      await user.click(level())
+      expect(level()).toHaveTextContent('100%')
+      expect(vb()).toBe('0 0 100 100')
+    })
+
+    it('dragging a zoomed photo pans it and is not a tap', async () => {
+      const user = userEvent.setup()
+      await openResult()
+      await user.click(screen.getByRole('button', { name: /Zoom in/ }))
+      await user.click(screen.getByRole('button', { name: /Zoom in/ }))
+      fireEvent.pointerDown(viewer(), { pointerId: 1, button: 0, clientX: 50, clientY: 50 })
+      fireEvent.pointerMove(viewer(), { pointerId: 1, clientX: 30, clientY: 50 })
+      fireEvent.pointerUp(viewer(), { pointerId: 1, clientX: 30, clientY: 50 })
+      fireEvent.click(viewer(), { clientX: 30, clientY: 50 })
+      expect(vb()).toBe('35 25 50 50') // dragged 20 px left = 10 image px right
+      expect(count()).toHaveTextContent('2')
+      expect(screen.getByText(/Drag to move/)).toBeInTheDocument()
+    })
+
+    it('Ctrl + wheel zooms around the cursor, a plain wheel does not', async () => {
+      await openResult()
+      fireEvent.wheel(viewer(), { deltaY: -300, clientX: 50, clientY: 50 })
+      expect(level()).toHaveTextContent('100%')
+      fireEvent.wheel(viewer(), { deltaY: -300, ctrlKey: true, clientX: 50, clientY: 50 })
+      expect(level()).toHaveTextContent('272%')
+    })
+
+    it('N rings + zooms to the next box to check, Z undoes; both by key position and not while typing', async () => {
+      await openResult()
+      expect(screen.queryByTestId('box-current')).toBeNull()
+      key('KeyN', screen.getByLabelText(/หมายเหตุ/)) // typing in Notes: ignored
+      expect(screen.queryByTestId('box-current')).toBeNull()
+      key('KeyN')
+      expect(screen.getByTestId('box-current')).toBeInTheDocument()
+      expect(screen.getByTestId('box-pos')).toHaveTextContent('Box to check 1 of 1')
+      expect(level()).toHaveTextContent('300%')
+      tap(20, 20) // remove a box (zoomed view: lands somewhere on the photo; any edit will do)
+      const after = count().textContent
+      expect(undoBtn()).toBeEnabled()
+      key('KeyZ')
+      expect(count().textContent).not.toBe(after)
+      expect(undoBtn()).toBeDisabled()
+      // Switching photo clears the ring and the zoom.
+      fireEvent.click(thumbs()[1])
+      expect(screen.queryByTestId('box-current')).toBeNull()
+      expect(level()).toHaveTextContent('100%')
+    })
+  })
+
   it('tap a model box removes it (count + strip badge), tap again restores it', async () => {
     await openResult()
     tap(20, 20)

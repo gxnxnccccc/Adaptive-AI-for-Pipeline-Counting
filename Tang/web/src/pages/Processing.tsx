@@ -4,6 +4,7 @@ import { ArrowRight, CircleAlert, CircleCheck, Info, LoaderCircle, RefreshCw, Up
 import ConfirmDialog from '@/components/ConfirmDialog'
 import DropZone from '@/components/DropZone'
 import PhotoRow, { warnings, type QueueRow } from '@/components/PhotoRow'
+import PhotoTips from '@/components/PhotoTips'
 import Toast from '@/components/Toast'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -193,136 +194,142 @@ export default function Processing() {
   const limit = t.limitLine(rows.length, MAX_FILES, MAX_FILE_MB)
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <Toast message={toast} onClose={closeToast} />
-
-      {/* Screen readers hear only finished photos (done / failed), not every checking / compressing step. */}
-      <div aria-live="polite" data-testid="queue-announce" className="sr-only">
-        {rows
-          .filter((r) => r.status === 'done' || r.status === 'failed')
-          .map((r) => (
-            <p key={r.id}>
-              {r.original.name}: {bi(r.status === 'done' && r.result ? t.count(r.result.count) : t.failed)}
-            </p>
-          ))}
+    // Phone: tips bar on top, then the capture column. Wide screens: capture column left, tips right.
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 min-[1180px]:grid min-[1180px]:max-w-[1080px] min-[1180px]:grid-cols-[minmax(0,1fr)_340px] min-[1180px]:items-start min-[1180px]:gap-5">
+      <div className="min-[1180px]:col-start-2 min-[1180px]:row-start-1">
+        <PhotoTips />
       </div>
+      <div className="flex min-w-0 flex-col gap-4 min-[1180px]:col-start-1 min-[1180px]:row-start-1">
+        <Toast message={toast} onClose={closeToast} />
 
-      {hasSession && (
-        <div
-          role="region"
-          aria-label={bi(t.sessionOpen)}
-          data-testid="session-banner"
-          className="flex flex-wrap items-center gap-3 rounded-control border border-accent/45 bg-accent/12 px-3.5 py-3 text-[15px]"
-        >
-          <Info aria-hidden="true" className="size-5 shrink-0 text-accent" />
-          <p className="flex min-w-[min(100%,14rem)] flex-1 flex-col">
-            <b>{t.sessionOpen.th}</b>
-            <En>{t.sessionOpen.en}</En>
-          </p>
-          <Button asChild className="whitespace-normal">
-            <Link to="/result">
-              <span>{t.backToReview.th}</span>
-              <span className="text-[12.5px] font-medium text-accent-ink/90">{t.backToReview.en}</span>
-              <ArrowRight aria-hidden="true" className="size-5" />
-            </Link>
-          </Button>
-        </div>
-      )}
-
-      {askNew && (
-        <ConfirmDialog
-          title={t.newDetectAsk}
-          body={t.newDetectBody}
-          yes={t.newDetectYes}
-          no={t.newDetectNo}
-          onYes={() => void detect()}
-          onNo={() => setAskNew(false)}
-        />
-      )}
-
-      {error && (
-        <div
-          role="alert"
-          data-testid="upload-error"
-          className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-[15px]"
-        >
-          <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-err" />
-          <p className="flex flex-col">
-            <b>{t.uploadFailed.th}</b>
-            <En>{error}</En>
-            <span className="mt-1">{t.photosKept.th}</span>
-            <En>{t.photosKept.en}</En>
-          </p>
-        </div>
-      )}
-
-      {phase === 'done' && summary && (
-        <div
-          role="status"
-          data-testid="done-banner"
-          className="flex flex-wrap items-start gap-3 rounded-control border border-ok/50 bg-ok/12 px-3.5 py-3 text-[15px]"
-        >
-          <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ok" />
-          {(() => {
-            const title = t.doneTitle(summary.counted, summary.sent, summary.pipes)
-            const failed = summary.sent - summary.counted
-            return (
-              <p className="flex min-w-0 flex-1 flex-col">
-                <b>{title.th}</b>
-                <En>{title.en}</En>
-                {failed > 0 && <span className="text-sm text-tx-2">{bi(t.doneFailed(failed))}</span>}
+        {/* Screen readers hear only finished photos (done / failed), not every checking / compressing step. */}
+        <div aria-live="polite" data-testid="queue-announce" className="sr-only">
+          {rows
+            .filter((r) => r.status === 'done' || r.status === 'failed')
+            .map((r) => (
+              <p key={r.id}>
+                {r.original.name}: {bi(r.status === 'done' && r.result ? t.count(r.result.count) : t.failed)}
               </p>
-            )
-          })()}
-        </div>
-      )}
-
-      <Card role="region" aria-labelledby="h-cap" className="gap-4 p-4 shadow-md min-[640px]:p-5">
-        <div className="flex items-center gap-3">
-          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-bold text-accent-ink">
-            1
-          </span>
-          <h2 id="h-cap" className="flex flex-col text-lg leading-tight font-bold">
-            <span>{t.step1.th}</span>
-            <En>{t.step1.en}</En>
-          </h2>
+            ))}
         </div>
 
-        <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
-
-        <p data-testid="queue-count" className="text-sm text-tx-2">
-          {limit.th} · {limit.en}
-        </p>
-
-        {notices.length > 0 && (
-          <div role="alert" className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-sm text-err-hi">
-            <CircleAlert aria-hidden="true" className="mt-px size-5 shrink-0 text-err" />
-            <div className="flex flex-col gap-1">
-              {notices.map((m) => (
-                <p key={m}>{m}</p>
-              ))}
-            </div>
+        {hasSession && (
+          <div
+            role="region"
+            aria-label={bi(t.sessionOpen)}
+            data-testid="session-banner"
+            className="flex flex-wrap items-center gap-3 rounded-control border border-accent/45 bg-accent/12 px-3.5 py-3 text-[15px]"
+          >
+            <Info aria-hidden="true" className="size-5 shrink-0 text-accent" />
+            <p className="flex min-w-[min(100%,14rem)] flex-1 flex-col">
+              <b>{t.sessionOpen.th}</b>
+              <En>{t.sessionOpen.en}</En>
+            </p>
+            <Button asChild className="whitespace-normal">
+              <Link to="/result">
+                <span>{t.backToReview.th}</span>
+                <span className="text-[12.5px] font-medium text-accent-ink/90">{t.backToReview.en}</span>
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </Link>
+            </Button>
           </div>
         )}
 
-        {rows.length > 0 && (
-          <ul data-testid="queue-rows" className="flex flex-col gap-3">
-            {rows.map((r) => (
-              <PhotoRow key={r.id} row={r} running={phase === 'running'} removeDisabled={busy} onRemove={remove} />
-            ))}
-          </ul>
+        {askNew && (
+          <ConfirmDialog
+            title={t.newDetectAsk}
+            body={t.newDetectBody}
+            yes={t.newDetectYes}
+            no={t.newDetectNo}
+            onYes={() => void detect()}
+            onNo={() => setAskNew(false)}
+          />
         )}
-      </Card>
 
-      {rows.length > 0 && (
-        <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-[5] -mx-4 flex flex-col gap-1.5 bg-bg/95 px-4 pt-2 pb-4 min-[640px]:static min-[640px]:mx-0 min-[640px]:bg-transparent min-[640px]:p-0 desk:bottom-0">
-          <Button data-testid="detect-cta" size="lg" className="w-full whitespace-normal" disabled={cta.disabled} onClick={cta.onClick}>
-            {cta.icon}
-            <span>{bi(cta.label)}</span>
-          </Button>
-          {cta.help && <p className="text-center text-[13px] text-tx-3">{bi(cta.help)}</p>}
-        </div>
-      )}
+        {error && (
+          <div
+            role="alert"
+            data-testid="upload-error"
+            className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-[15px]"
+          >
+            <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-err" />
+            <p className="flex flex-col">
+              <b>{t.uploadFailed.th}</b>
+              <En>{error}</En>
+              <span className="mt-1">{t.photosKept.th}</span>
+              <En>{t.photosKept.en}</En>
+            </p>
+          </div>
+        )}
+
+        {phase === 'done' && summary && (
+          <div
+            role="status"
+            data-testid="done-banner"
+            className="flex flex-wrap items-start gap-3 rounded-control border border-ok/50 bg-ok/12 px-3.5 py-3 text-[15px]"
+          >
+            <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ok" />
+            {(() => {
+              const title = t.doneTitle(summary.counted, summary.sent, summary.pipes)
+              const failed = summary.sent - summary.counted
+              return (
+                <p className="flex min-w-0 flex-1 flex-col">
+                  <b>{title.th}</b>
+                  <En>{title.en}</En>
+                  {failed > 0 && <span className="text-sm text-tx-2">{bi(t.doneFailed(failed))}</span>}
+                </p>
+              )
+            })()}
+          </div>
+        )}
+
+        <Card role="region" aria-labelledby="h-cap" className="gap-4 p-4 shadow-md min-[640px]:p-5">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-bold text-accent-ink">
+              1
+            </span>
+            <h2 id="h-cap" className="flex flex-col text-lg leading-tight font-bold">
+              <span>{t.step1.th}</span>
+              <En>{t.step1.en}</En>
+            </h2>
+          </div>
+
+          <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
+
+          <p data-testid="queue-count" className="text-sm text-tx-2">
+            {limit.th} · {limit.en}
+          </p>
+
+          {notices.length > 0 && (
+            <div role="alert" className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-sm text-err-hi">
+              <CircleAlert aria-hidden="true" className="mt-px size-5 shrink-0 text-err" />
+              <div className="flex flex-col gap-1">
+                {notices.map((m) => (
+                  <p key={m}>{m}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {rows.length > 0 && (
+            <ul data-testid="queue-rows" className="flex flex-col gap-3">
+              {rows.map((r) => (
+                <PhotoRow key={r.id} row={r} running={phase === 'running'} removeDisabled={busy} onRemove={remove} />
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        {rows.length > 0 && (
+          <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-[5] -mx-4 flex flex-col gap-1.5 bg-bg/95 px-4 pt-2 pb-4 min-[640px]:static min-[640px]:mx-0 min-[640px]:bg-transparent min-[640px]:p-0 desk:bottom-0">
+            <Button data-testid="detect-cta" size="lg" className="w-full whitespace-normal" disabled={cta.disabled} onClick={cta.onClick}>
+              {cta.icon}
+              <span>{bi(cta.label)}</span>
+            </Button>
+            {cta.help && <p className="text-center text-[13px] text-tx-3">{bi(cta.help)}</p>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -140,6 +140,16 @@
   20%, 78% { transform: rotate(-9deg); }
   100% { transform: rotate(0); }
 }
+.crew[data-mood='happy'] .crew-lean {
+  animation: crew-jump 0.72s ease-out calc(var(--i) * 60ms) both;
+}
+@keyframes crew-jump {
+  0%, 100% { transform: translateY(0); }
+  12% { transform: translateY(4px) scaleY(0.94); }
+  40% { transform: translateY(-38px) rotate(-3deg); }
+  64% { transform: translateY(0) scaleY(0.97); }
+  80% { transform: translateY(-9px); }
+}
 .crew-face {
   transform-box: fill-box;
   transform-origin: 50% 50%;
@@ -177,6 +187,7 @@
   transition: transform 0.3s var(--spring);
 }
 .crew[data-mood='watch'] :is(.crew-brow-l, .crew-brow-r) { transform: translateY(-4px); }
+.crew[data-mood='happy'] :is(.crew-brow-l, .crew-brow-r) { transform: translateY(-7px); }
 .crew[data-mood='wrong'] .crew-brow-l { transform: translateY(-2px) rotate(-16deg); }
 .crew[data-mood='wrong'] .crew-brow-r { transform: translateY(-2px) rotate(16deg); }
 .crew-mouth > * {
@@ -184,6 +195,7 @@
   transition: opacity 0.15s;
 }
 .crew[data-mood='idle'] .m-smile,
+.crew[data-mood='happy'] .m-smile,
 .crew[data-mood='watch'] .m-o,
 .crew[data-mood='away'] .m-flat,
 .crew[data-mood='wrong'] .m-frown {

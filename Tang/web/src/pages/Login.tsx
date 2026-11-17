@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import { ArrowBigUpDash, ArrowRight, CircleAlert, Eye, EyeOff, Lock, RefreshCw, TriangleAlert, User } from 'lucide-react'
+import { ArrowBigUpDash, ArrowRight, Check, CircleAlert, Eye, EyeOff, Lock, RefreshCw, TriangleAlert, User } from 'lucide-react'
 import ApiChip, { useApiStatus, type ApiStatus } from '@/components/ApiChip'
 import BrandMark from '@/components/BrandMark'
-import LoginCrew, { type CrewMood } from '@/components/LoginCrew'
+import LoginCrew, { prefersReducedMotion, type CrewMood } from '@/components/LoginCrew'
 import { Button } from '@/components/ui/button'
-import { DEMO_PASSWORD, useAuth } from '@/lib/auth'
+import { DEMO_PASSWORD, isValidLogin, useAuth } from '@/lib/auth'
 import { bi, t, type Pair } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +39,9 @@ function FieldError({ id, p }: { id: string; p: Pair }) {
 }
 
 
+// Long enough for the crew's staggered jump (0.72 s + 4 x 60 ms) to land.
+export const WELCOME_MS = 950
+
 export default function Login() {
   const { operator, login } = useAuth()
   const navigate = useNavigate()
@@ -55,12 +58,24 @@ export default function Login() {
   const [focus, setFocus] = useState<'id' | 'pw' | null>(null)
   const [wrongKey, setWrongKey] = useState(0)
   const [crewWrong, setCrewWrong] = useState(false)
+  // Correct password: the crew celebrates for a moment, THEN we sign in and open /processing.
+  // Signing in first would not work: the detection session is keyed by operator, so login() remounts this page.
+  const [welcome, setWelcome] = useState(false)
+  const pending = useRef<{ id: string; pw: string; keep: boolean } | null>(null)
+  useEffect(() => {
+    if (!welcome) return
+    const timer = setTimeout(() => {
+      const p = pending.current
+      if (p && login(p.id, p.pw, p.keep)) navigate('/processing', { replace: true })
+    }, WELCOME_MS)
+    return () => clearTimeout(timer)
+  }, [welcome, login, navigate])
   useEffect(() => {
     if (!wrongKey) return
     const timer = setTimeout(() => setCrewWrong(false), 1400)
     return () => clearTimeout(timer)
   }, [wrongKey])
-  const mood: CrewMood = crewWrong ? 'wrong' : show ? 'away' : focus ? 'watch' : 'idle'
+  const mood: CrewMood = welcome ? 'happy' : crewWrong ? 'wrong' : show ? 'away' : focus ? 'watch' : 'idle'
   const look = Math.min(1, (focus === 'pw' ? pw.length : id.length) / 16)
   const idRef = useRef<HTMLInputElement>(null)
   const pwRef = useRef<HTMLInputElement>(null)
@@ -84,6 +99,7 @@ export default function Login() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
+    if (welcome) return // already in, waiting for the jump to finish
     const next = { id: !id.trim(), pw: !pw.trim() } // same rule as auth.login
     if (next.id || next.pw) {
       setErrors(next)
@@ -91,8 +107,14 @@ export default function Login() {
       return
     }
     // Sign-in is allowed while the API is offline (Tang 2026-11-09); the warning above says detection won't work.
-    if (login(id, pw, keep)) {
-      navigate('/processing', { replace: true })
+    if (isValidLogin(id, pw)) {
+      if (prefersReducedMotion()) {
+        login(id, pw, keep)
+        navigate('/processing', { replace: true })
+      } else {
+        pending.current = { id, pw, keep }
+        setWelcome(true)
+      }
       return
     }
     setPwWrong(true)
@@ -289,12 +311,16 @@ export default function Login() {
               </p>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
+            <Button type="submit" size="lg" className="w-full" aria-disabled={welcome || undefined}>
               <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                <span>{t.login.th}</span> <span className="text-[12.5px] font-medium text-accent-ink/90">{t.login.en}</span>
+                <span>{(welcome ? t.welcome : t.login).th}</span>{' '}
+                <span className="text-[12.5px] font-medium text-accent-ink/90">{(welcome ? t.welcome : t.login).en}</span>
               </span>
-              <ArrowRight aria-hidden="true" className="size-5" />
+              {welcome ? <Check aria-hidden="true" className="size-5" /> : <ArrowRight aria-hidden="true" className="size-5" />}
             </Button>
+            <p role="status" data-testid="welcome-status" className="sr-only">
+              {welcome ? bi(t.welcome) : ''}
+            </p>
           </form>
         </div>
         <En>{bi(t.loginFoot)}</En>

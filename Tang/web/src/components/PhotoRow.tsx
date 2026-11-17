@@ -118,6 +118,13 @@ export default function PhotoRow({ row, running, removeDisabled, onRemove }: Pro
         </span>
         <SizeLine row={row} />
         <Status state={state} row={row} />
+        {/* Checked with no warnings: say so, so a clean photo is not just "no news". */}
+        {showWarnings && row.prep?.quality && warnings(row.prep.quality).length === 0 && state !== 'failed' && (
+          <span data-testid="photo-ok" className="inline-flex w-fit items-center gap-1.5 rounded-chip bg-ok/12 px-2 py-1 text-sm text-ok">
+            <CircleCheck aria-hidden="true" className="size-4 shrink-0" />
+            {bi(t.photoOk)}
+          </span>
+        )}
         {showWarnings &&
           warnings(row.prep?.quality).map((w) => (
             <span key={w.label.en} className="flex flex-col items-start gap-0.5">

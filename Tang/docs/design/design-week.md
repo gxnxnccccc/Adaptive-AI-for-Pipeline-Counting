@@ -16,7 +16,7 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 | Function to add | When |
 |---|---|
 | Caps Lock warning under the password | Demo ✅ built |
-| Crew waves / jumps once on a correct login | Demo |
+| Crew waves / jumps once on a correct login | Demo ✅ built |
 | Real sign-in (Supabase Auth) instead of `spds` | Later |
 | Forgot-password flow | Later |
 
@@ -29,8 +29,8 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 
 | Function to add | When |
 |---|---|
-| Pre-capture tips card (P1) with good/bad example photos | Demo |
-| Green "photo OK" check per row, not only warnings | Demo |
+| Pre-capture tips card (P1) with good/bad example photos | Demo ✅ built (drawn examples, right column on desktop, closed bar on phone) |
+| Green "photo OK" check per row, not only warnings | Demo ✅ built |
 | Panorama capture (P2, OPEN with the professor) | Later |
 | DO number entered before upload | Later |
 
@@ -43,8 +43,8 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 
 | Function to add | When |
 |---|---|
-| Zoom / pan on the photo | Demo |
-| Keyboard: Z = undo, N = next low-confidence box | Demo |
+| Zoom / pan on the photo | Demo ✅ built (+/- buttons, Ctrl+wheel / pinch, drag to pan) |
+| Keyboard: Z = undo, N = next low-confidence box | Demo ✅ built (works on the Thai layout too) |
 | Notes optional when actual = model (api-contract change) | Later |
 | SSIM/PSNR quality proof on screen (P5) | Later |
 | Send confirmed count to the company DB | Later |
@@ -58,9 +58,9 @@ Tag: **Demo** = before 30 Nov. **Later** = backlog.
 
 | Function to add | When |
 |---|---|
-| Click a recent row to open that batch | Demo |
+| Click a recent row to open that batch | Demo ✅ built (details dialog from the loaded row) |
 | Export recent batches as CSV | Demo ✅ built |
 | Filter by date / operator | Later |
 | Model accuracy over time | Later |
 
-Tang picked 3 Demo items (2026-11-16): Caps Lock, show only boxes to check, Export CSV. The other Demo items move to Later unless time is left.
+Tang picked 3 Demo items (2026-11-16): Caps Lock, show only boxes to check, Export CSV. The other 6 Demo items were built on 2026-11-17: all Demo items done.
