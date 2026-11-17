@@ -15,6 +15,9 @@ Owner: Tang (Phutiphum Thongin). Teammates: read freely, please don't edit, open
 | `docs/history.md` | What was done and what is next |
 | `docs/problem-log.md` | Problems for the final report |
 
+## Open the app on Tang's PC
+Double-click **SPDS** on the Desktop (made once by `demo/make-shortcut.bat`). It pulls the latest code and opens the browser. Details: [demo/README.md](demo/README.md).
+
 ## Run the bundle (no Docker, no Node)
 Install Python 3.12+, then double-click `demo/start.bat` (Mac/Linux: `demo/start.sh`). Opens http://localhost:8000 with the whole app. Details: [demo/README.md](demo/README.md).
 

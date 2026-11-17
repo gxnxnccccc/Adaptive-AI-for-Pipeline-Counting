@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Build stamp shown on the login page, so an old SPDS.exe / cached page is obvious at a glance.
+// Build stamp shown on the login page, so an old SPDS window / cached page is obvious at a glance.
 const sha = (() => {
   try {
     return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
