@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes, useNavigate } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AppShell from '@/components/AppShell'
 import { downloadBlob, renderAnnotatedPng } from '@/lib/annotate'
-import { confirmBatch, getHealth, getStats, type RecordRow } from '@/lib/api'
+import { confirmBatch, findSavedDo, getHealth, getStats, type RecordRow } from '@/lib/api'
 import { AuthProvider } from '@/lib/auth'
 import type { Box } from '@/lib/detection'
 import { DetectionSessionProvider, useDetectionSession, type SessionPhoto } from '@/lib/detection-session'
@@ -17,6 +17,7 @@ vi.mock('@/lib/api', () => ({
   getHealth: vi.fn(),
   confirmBatch: vi.fn(),
   getStats: vi.fn(),
+  findSavedDo: vi.fn(),
 }))
 vi.mock('@/lib/annotate', async (orig) => ({
   ...(await orig<typeof import('@/lib/annotate')>()),
@@ -107,6 +108,7 @@ beforeEach(() => {
   vi.mocked(getHealth).mockResolvedValue(true)
   vi.mocked(getStats).mockResolvedValue({ detectionsToday: 0, confirmedTotal: 0, correctionRate: null, failedImagesToday: 0 })
   vi.mocked(confirmBatch).mockReset()
+  vi.mocked(findSavedDo).mockReset().mockResolvedValue(null)
   vi.mocked(renderAnnotatedPng).mockReset().mockResolvedValue(new Blob(['png']))
   vi.mocked(downloadBlob).mockReset()
 })
@@ -405,6 +407,33 @@ describe('Result panel: totals + confirm (8c)', () => {
     for (let i = 0; i < 6; i++) await user.click(screen.getByRole('button', { name: /Minus 1/ }))
     expect(actualInput()).toHaveValue('0')
     expect(screen.getByTestId('variance')).toHaveTextContent(/-3.*vs model/)
+  })
+
+  it('a DO that is already saved: first Submit only warns, a second Submit with the same DO saves', async () => {
+    vi.mocked(confirmBatch).mockResolvedValue(saved)
+    vi.mocked(findSavedDo).mockResolvedValue({ ...saved, operatorId: 'OP-9', confirmedAt: '2026-11-17T05:26:00Z' })
+    const { user } = await openResult()
+    await user.type(screen.getByLabelText(/DO number/), 'DX1')
+    await user.type(screen.getByLabelText(/Notes/), 'n')
+    await user.click(submitBtn())
+    expect(findSavedDo).toHaveBeenCalledWith('DX1')
+    expect(confirmBatch).not.toHaveBeenCalled()
+    expect(await screen.findByTestId('do-taken')).toHaveTextContent(/already saved \(17 Nov, \d\d:\d\d, OP-9\)/)
+    expect(screen.getByLabelText(/DO number/)).toHaveFocus()
+
+    await user.click(submitBtn())
+    expect(confirmBatch).toHaveBeenCalledTimes(1)
+  })
+
+  it('duplicate-DO lookup failing does not block saving', async () => {
+    vi.mocked(confirmBatch).mockResolvedValue(saved)
+    vi.mocked(findSavedDo).mockRejectedValue(new Error('offline'))
+    const { user } = await openResult()
+    await user.type(screen.getByLabelText(/DO number/), 'DX1')
+    await user.type(screen.getByLabelText(/Notes/), 'n')
+    await user.click(submitBtn())
+    expect(confirmBatch).toHaveBeenCalledTimes(1)
+    expect(screen.queryByTestId('do-taken')).toBeNull()
   })
 
   it('submit sends batch id, kept image ids and the corrections, then Processing shows the toast', async () => {

@@ -201,7 +201,7 @@ function RateLine({ points }: { points: DayPoint[] }) {
   }
   return (
     <ResponsiveContainer width="100%" height={H} initialDimension={{ width: 320, height: H }}>
-      <LineChart data={data} margin={{ top: 24, right: 12, bottom: 0, left: 0 }} {...a11y(t.chartRate)}>
+      <LineChart data={data} margin={{ top: 36, right: 12, bottom: 0, left: 0 }} {...a11y(t.chartRate)}>
         <CartesianGrid vertical={false} stroke={C.grid} />
         <XAxis dataKey="date" interval={0} height={42} tickLine={false} axisLine={{ stroke: C.base }} tick={dayTickOf(points)} padding={{ left: 16, right: 16 }} />
         <YAxis width={44} domain={[0, max]} ticks={ticks} tickFormatter={(v: number) => `${v}%`} tickLine={false} axisLine={false} tick={axisTick} />
@@ -348,6 +348,8 @@ export default function DashboardCharts({ days, confirmed }: { days: DailyStat[]
   const points = toDaySeries(days)
   const rows = toModelVsActual(confirmed)
   const dayRows = (f: (p: DayPoint) => string | number) => points.map((p) => [p.date, f(p)])
+  const confirmedN = points.reduce((n, p) => n + p.confirmed, 0)
+  const correctedN = points.reduce((n, p) => n + p.corrected, 0)
   return (
     <>
       <Card
@@ -369,7 +371,7 @@ export default function DashboardCharts({ days, confirmed }: { days: DailyStat[]
       <Card
         id="c-rate"
         title={t.chartRate}
-        note={t.rateGapNote}
+        note={confirmedN >= MIN_PLOT_ROWS ? t.rateGapNote : undefined}
         table={
           <DataTable
             id="rate"
@@ -378,7 +380,14 @@ export default function DashboardCharts({ days, confirmed }: { days: DailyStat[]
           />
         }
       >
-        <RateLine points={points} />
+        {confirmedN >= MIN_PLOT_ROWS ? (
+          <RateLine points={points} />
+        ) : (
+          // 1-2 confirmed batches: a lone dot at "100%" looks alarming; say it in words instead.
+          <p data-testid="rate-few" className="flex min-h-[120px] items-center px-2 text-[15px] leading-relaxed text-tx-2">
+            {confirmedN === 0 ? bi(t.nothingConfirmed) : bi(t.rateFew(formatPct(correctedN / confirmedN), correctedN, confirmedN))}
+          </p>
+        )}
       </Card>
       <Card
         id="c-mva"

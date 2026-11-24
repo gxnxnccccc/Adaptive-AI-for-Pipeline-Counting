@@ -1,8 +1,9 @@
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { ArrowRight, Check, CircleAlert, Flag, LoaderCircle, Minus, Plus, RefreshCw, X } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { ArrowRight, Check, CircleAlert, Flag, LoaderCircle, Minus, Plus, RefreshCw, TriangleAlert, X } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { findSavedDo, type RecordRow } from '@/lib/api'
 import { MAX_DO, MAX_NOTES, formatVariance, parseActual, validateConfirm, variance } from '@/lib/confirm'
 import { correctedCount, totals, type PhotoEdits } from '@/lib/corrections'
 import type { SessionPhoto } from '@/lib/detection-session'
@@ -58,6 +59,9 @@ function FieldError({ id, show, text }: { id: string; show: boolean; text: Pair 
     </p>
   )
 }
+
+const stamp = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
 
 // Totals: model total -> corrected total over the kept, non-failed photos (preview .tot-grid / .kv / .per).
 function Totals({ photos, edits }: { photos: SessionPhoto[]; edits: Record<string, PhotoEdits> }) {
@@ -175,6 +179,14 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inFlight = useRef(false) // blocks a second submit before React re-renders
+  // Same DO already saved: warn once; a second Submit with the same DO saves anyway (a recount is allowed).
+  const [dupDo, setDupDo] = useState<{ doNumber: string; row: RecordRow } | null>(null)
+  const focusDo = useRef(false)
+  useEffect(() => {
+    if (busy || !focusDo.current) return
+    focusDo.current = false
+    document.getElementById('cf-do')?.focus()
+  }, [busy])
 
   const actual = actualText ?? String(tot.corrected)
   const errors = validateConfirm({ doNumber, actual, notes })
@@ -204,7 +216,17 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
     onBusyChange(true)
     setError(null)
     try {
-      await onSubmit({ doNumber: doNumber.trim(), actualAmount: actualNum, notes: notes.trim() })
+      const doTrim = doNumber.trim()
+      if (dupDo?.doNumber !== doTrim) {
+        // Lookup failure (API down, old API) must not block saving: it only skips the warning.
+        const row = await findSavedDo(doTrim).catch(() => null)
+        if (row) {
+          setDupDo({ doNumber: doTrim, row })
+          focusDo.current = true // the field is disabled until busy ends; focus it then
+          return
+        }
+      }
+      await onSubmit({ doNumber: doTrim, actualAmount: actualNum, notes: notes.trim() })
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -215,6 +237,8 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
   }
 
   const showDoErr = touched.doNumber && !!errors.doNumber
+  // Only while the field still holds the DO that was found (editing it hides the warning).
+  const showDup = !!dupDo && !showDoErr && dupDo.doNumber === doNumber.trim()
   const showNotesErr = touched.notes && !!errors.notes
 
   return (
@@ -261,11 +285,25 @@ export default function ConfirmPanel({ photos, edits, onSubmit, onCancel, onBusy
               autoComplete="off"
               spellCheck={false}
               aria-invalid={showDoErr}
-              aria-describedby={showDoErr ? 'cf-do-err' : undefined}
+              aria-describedby={showDoErr ? 'cf-do-err' : showDup ? 'cf-do-dup' : undefined}
               onChange={(e) => setDoNumber(e.target.value)}
               onBlur={() => setTouched((s) => ({ ...s, doNumber: true }))}
             />
             <FieldError id="cf-do-err" show={showDoErr} text={t.doRequired} />
+            {showDup && (
+              <p id="cf-do-dup" role="alert" data-testid="do-taken" className="flex items-start gap-1.5 text-sm font-medium text-warn">
+                <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {(() => {
+                  const p = t.doTaken(stamp(dupDo.row.confirmedAt ?? dupDo.row.createdAt), dupDo.row.operatorId)
+                  return (
+                    <span className="flex flex-col leading-tight">
+                      <span>{p.th}</span>
+                      <span className="text-[12.5px] font-normal">{p.en}</span>
+                    </span>
+                  )
+                })()}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

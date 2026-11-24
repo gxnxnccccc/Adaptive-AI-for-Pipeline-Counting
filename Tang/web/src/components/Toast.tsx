@@ -14,7 +14,8 @@ type Props = {
   onClose: () => void
 }
 
-// Green success toast (preview .toast): top-right, ✕, auto-closes after 5 s.
+// Green success toast: bottom-right (top-right covered the step indicator + tips card), ✕, auto-closes after 5 s.
+// Phones: above the bottom tab bar.
 // The live region is always mounted; the text goes in one render after it, so screen readers announce it
 // even when the page mounts with a message (Result -> Processing after a submit).
 // "Saved DO DX1" -> "Saved DO <span mono>DX1</span>"
@@ -47,11 +48,11 @@ export default function Toast({ message, onClose }: Props) {
   }, [message, onClose])
 
   return (
-    <div role="status" aria-live="polite" className="pointer-events-none fixed top-[70px] right-4 left-4 z-50 ml-auto max-w-[420px]">
+    <div role="status" aria-live="polite" className="pointer-events-none fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] left-4 z-50 ml-auto max-w-[420px] desk:bottom-6">
       {shown && (
         <div
           data-testid="saved-toast"
-          className="pointer-events-auto flex items-center gap-3 rounded-control border border-ok/55 bg-ok-surface py-3 pr-2 pl-3.5 shadow-pop animate-in fade-in slide-in-from-top-2"
+          className="pointer-events-auto flex items-center gap-3 rounded-control border border-ok/55 bg-ok-surface py-3 pr-2 pl-3.5 shadow-pop animate-in fade-in slide-in-from-bottom-2"
         >
           <CircleCheck aria-hidden="true" className="size-5 shrink-0 text-ok" />
           <p className="flex min-w-0 flex-1 flex-col font-semibold">

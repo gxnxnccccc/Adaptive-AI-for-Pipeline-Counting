@@ -9,7 +9,7 @@ export const t = {
   // Processing page, copied from docs/design/preview/capture-upload.html
   takePhoto: { th: 'ถ่ายรูปด้วยกล้อง', en: 'Take photo' },
   orWord: { th: 'หรือ', en: 'or' },
-  tapToChoose: { th: 'แตะเพื่อเลือกรูป (ได้หลายรูป)', en: 'Tap to choose photos, or drag and drop' },
+  tapToChoose: { th: 'แตะเพื่อเลือกรูป (เลือกได้หลายรูปพร้อมกัน)', en: 'Tap to choose photos (several at once), or drag and drop' },
   limitLine: (n: number, max: number, mb: number): Pair => ({
     th: `สูงสุด ${max} รูป รูปละไม่เกิน ${mb} MB`,
     en: `Max ${max} photos, ${mb} MB each (${n}/${max})`,
@@ -201,7 +201,7 @@ export const t = {
   tipRuleFrame: { th: 'ถอยให้เห็นปลายท่อทุกท่อในรูป', en: 'Step back until every pipe end is in the frame.' },
   tipRuleFace: { th: 'ยืนตรงหน้ากอง ถือกล้องให้ขนานกับปลายท่อ', en: 'Stand in front of the stack, phone parallel to the ends.' },
   tipRuleSteady: { th: 'แสงพอ ถือนิ่ง ๆ แล้วค่อยกด', en: 'Good light, hold still, then shoot.' },
-  photoOk: { th: 'รูปใช้ได้ แสงพอ ภาพคม', en: 'Photo OK: good light, sharp' },
+  photoOk: { th: 'รูปใช้ได้', en: 'Photo OK' },
   qDark: { th: 'ภาพมืดเกินไป', en: 'Too dark' },
   qDarkHint: { th: 'เพิ่มแสงหรือเปิดแฟลช แล้วถ่ายใหม่', en: 'Add light or use flash, then retake' },
   qBright: { th: 'ภาพสว่างเกินไป', en: 'Too bright' },
@@ -222,12 +222,13 @@ export const t = {
   }),
   uploadFailed: { th: 'ส่งรูปไม่สำเร็จ', en: 'Upload failed' },
   photosKept: { th: 'รูปยังอยู่ครบ กดลองใหม่ได้เลย', en: 'Your photos are kept. Press Try again.' },
-  doneTitle: (counted: number, total: number, pipes: number): Pair => ({
-    th: `ตรวจจับเสร็จ: นับได้ ${counted} จาก ${total} รูป พบ ${pipes} ท่อ`,
-    en: `Detection complete: ${counted} of ${total} photos counted, ${pipes} pipes.`,
+  doneTitle: (pipes: number): Pair => ({
+    th: `ตรวจจับเสร็จ: พบ ${pipes} ท่อ`,
+    en: `Detection complete: counted ${pipes} pipes.`,
   }),
   doneFailed: (n: number): Pair => ({ th: `${n} รูปไม่สำเร็จ ดูได้ในหน้าถัดไป`, en: `${n} failed, you can check it on the next page.` }),
   review: { th: 'ไปตรวจผล', en: 'Review' },
+  reviewFirst: { th: 'ตรวจผลชุดนี้ก่อน แล้วค่อยเริ่มชุดใหม่', en: 'Review these results first, then start a new batch.' },
   sizeTitle: { th: 'ต้นฉบับ → หลังบีบอัด', en: 'original → compressed' },
   // Thai around the bold count: "พบ <b>44</b> ท่อ"
   foundPre: 'พบ',
@@ -262,7 +263,8 @@ export const t = {
   backToProcessing: { th: 'กลับไปหน้าตรวจนับ', en: 'Back to processing' },
   photoPos: (i: number, n: number): Pair => ({ th: `รูป ${i}/${n}`, en: `Photo ${i} of ${n}` }),
   pipesUnit: { th: 'ท่อ', en: 'pipes' },
-  toCheck: { th: 'ควรตรวจ', en: 'to check' },
+  // Same word on the chip (this photo) and in Totals (all photos), so 9 vs 19 is not a contradiction.
+  toCheck: { th: 'ควรตรวจ', en: 'to check, this photo' },
   photoView: { th: 'มุมมองภาพ', en: 'Photo view' },
   viewCrop: { th: 'พื้นที่ท่อ', en: 'Pipe area' },
   viewFull: { th: 'ทั้งภาพ', en: 'Full photo' },
@@ -289,7 +291,7 @@ export const t = {
   removedChip: { th: 'ลบ', en: 'removed' },
   addedChip: { th: 'เพิ่ม', en: 'added' },
   noCorrections: { th: 'ยังไม่มีการแก้ไข', en: 'No corrections yet' },
-  lowConfBoxes: { th: 'กรอบความมั่นใจต่ำ', en: 'Low-confidence boxes' },
+  lowConfBoxes: { th: 'ควรตรวจ ทุกรูป', en: 'To check, all photos' },
   photosCounted: { th: 'รูปที่นับได้', en: 'Photos counted' },
   nFailed: (n: number): Pair => ({ th: `${n} ล้มเหลว`, en: `${n} failed` }),
   perPhoto: { th: 'แยกตามรูป', en: 'Per photo' },
@@ -346,6 +348,15 @@ export const t = {
   rateOf: (corrected: number, confirmed: number): Pair => ({
     th: `แก้ไข ${corrected} จาก ${confirmed} ชุด`,
     en: `${corrected} of ${confirmed} confirmed corrected`,
+  }),
+  rateFew: (pct: string, corrected: number, confirmed: number): Pair => ({
+    th: `ตอนนี้แก้ไข ${pct} (${corrected} จาก ${confirmed} ชุด) ต้องยืนยันอย่างน้อย 3 ชุดก่อนจึงจะเห็นแนวโน้ม`,
+    en: `So far ${pct} corrected (${corrected} of ${confirmed} batches). The trend shows from 3 confirmed batches.`,
+  }),
+  kpiFew: (n: number): Pair => ({ th: `จากแค่ ${n} ชุด ยังน้อยเกินจะสรุป`, en: `From only ${n} batch${n === 1 ? '' : 'es'}, too few to judge` }),
+  doTaken: (when: string, op: string): Pair => ({
+    th: `เลข DO นี้บันทึกไปแล้ว (${when}, ${op}) ตรวจเลขอีกครั้ง หรือกดส่งอีกครั้งเพื่อบันทึกซ้ำ`,
+    en: `This DO was already saved (${when}, ${op}). Check the number, or press Submit again to save it anyway.`,
   }),
   chartsLoadFailed: { th: 'โหลดกราฟไม่สำเร็จ', en: 'Could not load the charts.' },
 }

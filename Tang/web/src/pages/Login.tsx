@@ -186,16 +186,12 @@ export default function Login() {
             </div>
           )}
 
+          {/* Empty fields: the message sits only under the empty field(s), not also in a red box on top.
+              Screen readers still hear one summary. */}
           {(errors.id || errors.pw) && (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-[15px]"
-            >
-              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-err" />
-              <p className="flex flex-col leading-tight">
-                <b>{t.loginRequired.th}</b> <En>{t.loginRequired.en}</En>
-              </p>
-            </div>
+            <p role="alert" className="sr-only">
+              {bi(t.loginRequired)}
+            </p>
           )}
 
           <form onSubmit={submit} noValidate className="flex flex-col gap-4">
@@ -305,7 +301,8 @@ export default function Login() {
                 />
                 <Bi p={t.keepSignedIn} />
               </label>
-              <p className="text-right text-[13px] leading-tight text-tx-3">
+              {/* Phone: wraps under the checkbox, left-aligned with its label. Wider: right-aligned on the same line. */}
+              <p className="basis-full pl-8 text-left text-[13px] leading-tight text-tx-3 min-[480px]:basis-auto min-[480px]:pl-0 min-[480px]:text-right">
                 <span className="block">{t.forgot.th}</span>
                 <span className="block">{t.forgot.en}</span>
               </p>
@@ -324,10 +321,10 @@ export default function Login() {
           </form>
         </div>
         <En>{bi(t.loginFoot)}</En>
-        {/* Build stamp: only in the live (dev) app, tiny in the corner, so an old SPDS window is still easy to spot.
+        {/* Build stamp: only in the live (dev) app and wide screens (on phones it floated over the form), tiny in the corner, so an old SPDS window is still easy to spot.
             The built bundle (demo/site, Docker) leaves it out. */}
         {import.meta.env.DEV && (
-          <En className="fixed right-2 bottom-1 font-mono text-[10px] opacity-70" data-testid="build">
+          <En className="fixed right-2 bottom-1 hidden font-mono text-[10px] opacity-70 min-[900px]:inline" data-testid="build">
             build {typeof __BUILD__ === 'string' ? __BUILD__ : 'dev'}
           </En>
         )}

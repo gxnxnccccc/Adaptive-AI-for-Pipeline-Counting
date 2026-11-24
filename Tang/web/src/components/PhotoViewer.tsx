@@ -12,13 +12,22 @@ export const CROP_PAD_FRACTION = 0.03
 
 // viewBox in image pixels: the crop box + padding (kept inside the image), or the whole image.
 // TODO(contract): crop_box OPEN (mock = union of pipe boxes, no padding). No crop box -> whole image.
-export function viewBoxFor(view: View, cropBox: Box | null | undefined, imageW: number, imageH: number): Box {
+// `added`: boxes the operator added. The crop view grows to include them, so a box added at the edge is never cut in half.
+export function viewBoxFor(view: View, cropBox: Box | null | undefined, imageW: number, imageH: number, added: Box[] = []): Box {
   if (view === 'full' || !cropBox) return [0, 0, imageW, imageH]
   const pad = Math.round(CROP_PAD_FRACTION * Math.min(imageW, imageH))
-  const { x, y, w, h } = toRect(cropBox)
+  const c = toRect(cropBox)
+  let [x, y, x2, y2] = [c.x, c.y, c.x + c.w, c.y + c.h]
+  for (const b of added) {
+    const r = toRect(b)
+    x = Math.min(x, r.x - pad)
+    y = Math.min(y, r.y - pad)
+    x2 = Math.max(x2, r.x + r.w + pad)
+    y2 = Math.max(y2, r.y + r.h + pad)
+  }
   const x0 = Math.max(0, x - pad)
   const y0 = Math.max(0, y - pad)
-  return [x0, y0, Math.min(imageW, x + w + pad) - x0, Math.min(imageH, y + h + pad) - y0]
+  return [x0, y0, Math.min(imageW, x2 + pad) - x0, Math.min(imageH, y2 + pad) - y0]
 }
 
 // Screen point -> image pixels for an <svg> drawn with preserveAspectRatio="xMidYMid meet" (letterboxed, centred).
@@ -84,7 +93,7 @@ export default function PhotoViewer({
   onZoom,
   current = null,
 }: Props) {
-  const base = viewBoxFor(view, cropBox, width, height)
+  const base = viewBoxFor(view, cropBox, width, height, edits?.added)
   const vb = zoomedViewBox(base, zoom)
   const removed = new Set(edits?.removed)
   const stroke = readOnly ? 1 : 2

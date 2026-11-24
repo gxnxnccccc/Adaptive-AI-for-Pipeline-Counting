@@ -96,6 +96,15 @@ export async function listRecords(query: RecordsQuery): Promise<RecordsPage> {
   return { items: body.items.map(toRecord), total: body.total }
 }
 
+// A batch already saved (confirmed or flagged) with exactly this DO number, case-insensitive. null = none.
+// Uses the existing ?q= search (substring), then keeps exact matches only. No API change needed.
+export async function findSavedDo(doNumber: string): Promise<RecordRow | null> {
+  const want = doNumber.trim().toLowerCase()
+  if (!want) return null
+  const { items } = await listRecords({ q: doNumber.trim(), limit: 100 })
+  return items.find((r) => r.status !== 'draft' && r.doNumber?.trim().toLowerCase() === want) ?? null
+}
+
 // ---- Confirm ----
 
 // corrections: per-box edits of the kept photos (from toCorrections() in corrections.ts); [] = none.

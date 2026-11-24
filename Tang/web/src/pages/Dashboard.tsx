@@ -45,6 +45,7 @@ const ScanLens = createLucideIcon('ScanLens', [
 ])
 
 const DASH = '—'
+const FEW_BATCHES = 3
 const hhmm = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
 // Today -> "10:41"; older -> "08/11 10:41".
 function when(iso: string, now: Date) {
@@ -155,7 +156,8 @@ function kpisOf(s: Stats | undefined): Kpi[] {
             <small className="text-xl text-tx-2">%</small>
           </>
         ),
-      foot: s && rate === null ? t.nothingConfirmed : t.kpiCorrectionFoot,
+      // 1-2 confirmed batches: "100%" alone reads like an alarm, so the foot says how few it is.
+      foot: s && rate === null ? t.nothingConfirmed : s && s.confirmedTotal < FEW_BATCHES ? t.kpiFew(s.confirmedTotal) : t.kpiCorrectionFoot,
       meter: rate === null ? undefined : rate * 100,
     },
     {

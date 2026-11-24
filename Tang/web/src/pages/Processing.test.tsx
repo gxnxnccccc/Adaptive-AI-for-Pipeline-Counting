@@ -286,12 +286,18 @@ describe('Processing queue: detect', () => {
     const user = renderPage()
     const files = photos(3)
     await addReady(user, files)
+    await user.upload(pick(), [files[0]]) // a duplicate -> "Skipped 1" line
+    expect(screen.getByTestId('dupes')).toBeInTheDocument()
     await user.click(cta())
 
     expect(mockUpload).toHaveBeenCalledTimes(1)
     expect(mockUpload.mock.calls[0][0]).toEqual(files.map((f) => compressed.get(f)))
     expect(mockUpload.mock.calls[0][1]).toBe('OP-7')
-    expect(await screen.findByTestId('done-banner')).toHaveTextContent(/3 of 3 photos counted, 120 pipes/)
+    expect(await screen.findByTestId('done-banner')).toHaveTextContent('ตรวจจับเสร็จ: พบ 120 ท่อDetection complete: counted 120 pipes.')
+    // Done: the picking-step lines are gone and the picker is replaced by "review first".
+    expect(screen.queryByTestId('dupes')).toBeNull()
+    expect(screen.queryByTestId('dropzone')).toBeNull()
+    expect(screen.getByTestId('review-first')).toHaveTextContent('Review these results first')
 
     // No auto-navigation: the CTA turns into Review results.
     expect(screen.queryByTestId('result-page')).not.toBeInTheDocument()
@@ -315,7 +321,7 @@ describe('Processing queue: detect', () => {
     await addReady(user, photos(2))
     await user.click(cta())
     const banner = await screen.findByTestId('done-banner')
-    expect(banner).toHaveTextContent(/1 of 2 photos counted, 44 pipes/)
+    expect(banner).toHaveTextContent(/Detection complete: counted 44 pipes\.1 รูปไม่สำเร็จ/)
     const [r1, r2] = rows()
     expect(within(r1).getByText('44')).toBeInTheDocument()
     expect(within(r2).getByText(/ไม่สำเร็จ/)).toBeInTheDocument()

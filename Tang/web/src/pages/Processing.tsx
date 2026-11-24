@@ -179,6 +179,9 @@ export default function Processing() {
       setSummary({ counted: ok.length, sent: batch.length, pipes: ok.reduce((s, p) => s + p.result.count, 0) })
       start(resp.batch_id, photos)
       setPhase('done')
+      // Old "not an image" / "skipped" lines belong to the picking step, not to the result.
+      setNotices([])
+      setDupes(0)
     } catch (e) {
       // Rows stay ready, so Try again re-sends the same compressed files.
       setError(e instanceof Error ? e.message : String(e))
@@ -284,7 +287,7 @@ export default function Processing() {
           >
             <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ok" />
             {(() => {
-              const title = t.doneTitle(summary.counted, summary.sent, summary.pipes)
+              const title = t.doneTitle(summary.pipes)
               const failed = summary.sent - summary.counted
               return (
                 <p className="flex min-w-0 flex-1 flex-col">
@@ -308,11 +311,20 @@ export default function Processing() {
             </h2>
           </div>
 
-          <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
-
-          <p data-testid="queue-count" className="text-sm text-tx-2">
-            {limit.th} · {limit.en}
-          </p>
+          {phase === 'done' ? (
+            // Done: no greyed-out picker that looks broken; say what to do next instead.
+            <p data-testid="review-first" className="flex items-start gap-2 rounded-control bg-raised px-3.5 py-3 text-[15px] text-tx-2">
+              <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent" />
+              <span>{bi(t.reviewFirst)}</span>
+            </p>
+          ) : (
+            <>
+              <DropZone onFiles={addFiles} disabled={busy || rows.length >= MAX_FILES} />
+              <p data-testid="queue-count" className="text-sm text-tx-2">
+                {limit.th} · {limit.en}
+              </p>
+            </>
+          )}
 
           {notices.length > 0 && (
             <div role="alert" className="flex items-start gap-3 rounded-control border border-err/50 bg-err/12 px-3.5 py-3 text-sm text-err-hi">

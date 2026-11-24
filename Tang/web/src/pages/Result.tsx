@@ -176,7 +176,7 @@ export default function Result() {
   // Model boxes still to check, in detection order; N walks through them (and wraps).
   const lowList = p.result.pipes.flatMap((x, i) => (x.lowConfidence && !removed.has(i) ? [i] : []))
   const pos = current == null ? -1 : lowList.indexOf(current)
-  const base = viewBoxFor(failed ? 'full' : view, p.result.cropBox, p.width, p.height)
+  const base = viewBoxFor(failed ? 'full' : view, p.result.cropBox, p.width, p.height, e.added)
   const scale = zoom?.scale ?? 1
 
   function nextToCheck() {

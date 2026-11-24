@@ -301,6 +301,15 @@ describe('Dashboard', () => {
       expect(cells(screen.getByTestId('table-mva'))).toHaveLength(2)
     })
 
+    it('1-2 confirmed batches: rate trend is a sentence, not a lone 100% dot; the KPI says how few', async () => {
+      const two = WEEK.map((d, i) => (i === 6 ? d : { ...d, confirmed: 0, corrected: 0, correction_rate: null }))
+      two[6] = { ...two[6], confirmed: 2, corrected: 2, correction_rate: 1 }
+      stubApi({ stats: { ...wire(3, 2, 1, 0) }, items: THREE, daily: two, confirmed: CONF10.slice(8) })
+      renderIt()
+      expect(await screen.findByTestId('rate-few')).toHaveTextContent('So far 100% corrected (2 of 2 batches)')
+      expect(screen.getByTestId('kpi-correction')).toHaveTextContent('From only 2 batches, too few to judge')
+    })
+
     it('hidden in the empty state, and no chart requests are made', async () => {
       const f = stubApi({ stats: wire(0, 0, null, 0), items: [], daily: WEEK, confirmed: [] })
       renderIt()

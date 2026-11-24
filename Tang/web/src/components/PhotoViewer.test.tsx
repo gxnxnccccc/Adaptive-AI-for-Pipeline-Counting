@@ -15,6 +15,13 @@ function mockRect(el: Element, r: { left: number; top: number; width: number; he
 }
 
 describe('viewBoxFor', () => {
+  it('crop view grows to include an added box (with the same padding), never past the image', () => {
+    // crop 100..300 x 100..200, pad = 0.03 * 800 = 24
+    expect(viewBoxFor('crop', [100, 100, 200, 100], 1000, 800)).toEqual([76, 76, 248, 148])
+    // box 40..80 x 120..160 added left of the crop: the view takes it in with padding (clamped at x = 0)
+    expect(viewBoxFor('crop', [100, 100, 200, 100], 1000, 800, [[40, 120, 40, 40]])).toEqual([0, 72, 324, 152])
+  })
+
   it('is the whole image in full view, or without a crop box', () => {
     expect(viewBoxFor('full', [100, 100, 200, 100], 1000, 800)).toEqual([0, 0, 1000, 800])
     expect(viewBoxFor('crop', null, 1000, 800)).toEqual([0, 0, 1000, 800])
