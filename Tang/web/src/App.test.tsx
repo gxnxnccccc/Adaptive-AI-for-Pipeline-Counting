@@ -98,7 +98,8 @@ describe('routes + auth', () => {
     await renderAt('/login')
     await signIn(user)
     // Sidebar (desktop) and top bar (phone) both have a logout button; CSS hides one.
-    await user.click((await screen.findAllByRole('button', { name: /ออกจากระบบ/ }))[0])
+    // Sign-in lands after the crew's 0.95 s jump (WELCOME_MS), so wait longer than findBy's 1 s default.
+    await user.click((await screen.findAllByRole('button', { name: /ออกจากระบบ/ }, { timeout: 3000 }))[0])
     expect(path()).toHaveTextContent('/login')
     expect(idField()).toBeInTheDocument()
     expect(localStorage.getItem('spds.operator')).toBeNull()
