@@ -47,7 +47,7 @@ describe('Login', () => {
     expect(screen.getByRole('checkbox', { name: /จดจำการเข้าสู่ระบบ.*Keep me signed in/ })).toBeChecked()
     expect(screen.getByText(/Demo login, not real security/)).toBeInTheDocument()
     expect(screen.getByText('spds')).toBeInTheDocument() // demo password shown on the card
-    expect(screen.getByText('นับท่อเหล็กจากรูปถ่าย')).toBeInTheDocument()
+    expect(screen.getByTestId('headline')).toHaveTextContent(/^Adaptive AI for Pipeline Counting$/)
     // "Forgot" is plain help text now, not a struck-through disabled button
     expect(screen.queryByRole('button', { name: /Forgot/ })).not.toBeInTheDocument()
     expect(screen.getByText(/Ask your admin/)).toBeInTheDocument()

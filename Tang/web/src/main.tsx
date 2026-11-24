@@ -6,6 +6,7 @@ import '@fontsource/anuphan/400.css'
 import '@fontsource/anuphan/500.css'
 import '@fontsource/anuphan/600.css'
 import '@fontsource/anuphan/700.css'
+import '@fontsource/anton/400.css' // Login headline; free stand-in for Sublime Bold Condensed (see index.css --font-brand)
 import '@fontsource/mitr/500.css'
 import '@fontsource/mitr/600.css'
 import '@fontsource/spline-sans-mono/400.css'

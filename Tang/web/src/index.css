@@ -29,6 +29,8 @@
 
   --font-sans: "Anuphan", "Noto Sans Thai", system-ui, "Segoe UI", sans-serif;
   --font-display: "Mitr", "Anuphan", system-ui, sans-serif;
+  /* Login headline: Sublime Bold Condensed (Glyphonic, paid licence) if it is installed on this PC, else free Anton. */
+  --font-brand: "Sublime", "Anton", "Mitr", system-ui, sans-serif;
   --font-mono: "Spline Sans Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   --radius-chip: 6px;
@@ -66,6 +68,13 @@
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
   }
+}
+
+/* Sublime is only used when installed on the computer (local()): nothing is downloaded, no 404 when it is missing. */
+@font-face {
+  font-family: "Sublime";
+  src: local("Sublime Bold Condensed"), local("Sublime-BoldCondensed"), local("Sublime BoldCondensed");
+  font-weight: 100 900;
 }
 
 @layer base {
@@ -201,14 +210,8 @@
 .crew[data-mood='wrong'] .m-frown {
   opacity: 1;
 }
-.crew-name {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  fill: rgb(255 255 255 / 0.78);
-}
+
 @media (max-width: 899px) {
-  .crew-name { display: none; } /* ~7 px at phone size: unreadable */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -405,4 +408,55 @@
 @media (prefers-reduced-motion: reduce) {
   .cam-intro { display: none; }
   .cam-dialog { animation: none; }
+}
+
+/* ---- Login blob button with seigaiha waves (Tang 2026-11-24) ---- */
+.blob-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.blob-btn-waves {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.1'%3E%3Cpath d='M0 16a16 16 0 0 1 32 0M5 16a11 11 0 0 1 22 0M10 16a6 6 0 0 1 12 0'/%3E%3Cpath d='M-16 8a16 16 0 0 1 32 0M-11 8a11 11 0 0 1 22 0M-6 8a6 6 0 0 1 12 0M16 8a16 16 0 0 1 32 0M21 8a11 11 0 0 1 22 0M26 8a6 6 0 0 1 12 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 32px 16px;
+  opacity: 0.16;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+.blob-btn-blobs {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  filter: url(#blob-goo);
+}
+.blob-btn-blobs i {
+  position: absolute;
+  top: 2px;
+  width: 30%;
+  height: 100%;
+  border-radius: 100%;
+  background: var(--color-pink-ink);
+  transform: translate3d(0, 160%, 0) scale(1.6);
+  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+.blob-btn-blobs i:nth-child(1) { left: -5%; transition-delay: 0ms; }
+.blob-btn-blobs i:nth-child(2) { left: 25%; transition-delay: 70ms; }
+.blob-btn-blobs i:nth-child(3) { left: 50%; transition-delay: 140ms; }
+.blob-btn-blobs i:nth-child(4) { left: 75%; transition-delay: 210ms; }
+.blob-btn:is(:hover, :focus-visible, [aria-disabled='true']) .blob-btn-blobs i { transform: translate3d(0, 0, 0) scale(1.7); }
+.blob-btn:is(:hover, :focus-visible) .blob-btn-waves { opacity: 0.24; }
+@media (prefers-reduced-motion: no-preference) {
+  .blob-btn-waves { animation: seigaiha-drift 14s linear infinite; }
+  .blob-btn:hover .blob-btn-waves { animation-duration: 4s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob-btn-blobs i { transition: none; }
+}
+@keyframes seigaiha-drift {
+  from { background-position: 0 0; }
+  to { background-position: 64px 0; }
 }

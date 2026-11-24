@@ -1,5 +1,7 @@
 # Screen: Login with the RAI crew   Ref: Tang's palette + flat-character pictures (chat, 2026-11-16)   Plan: `docs/plans/brand-crew-login.md`
 
+**Update 2026-11-24 (Tang's character sheets):** the crew are now animals: Tang = black panther (purple/black/cyan techwear, headphones), Opor = wolf (silver/ice blue/navy hoodie, goggles, laptop), Hymm = gorilla (red/gold/charcoal, gold shades + chain, red key), Game = fox (pink/orange/cream, goggles, badminton racket), Guy = raccoon (mint/cream/brown, beanie, round glasses, headphones). Names under them removed. No brand logos on props. Headline = "Adaptive AI for Pipeline Counting" (English only) in `--font-brand` (Sublime Bold Condensed if installed on the PC, else free Anton). Sign in = blob button with seigaiha waves. Screenshot: `img/login-v3-animal-crew.png`. The older notes below describe v2 (flat people).
+
 Designed in code (decision 2026-11-04), not Figma. Screenshots: `img/login-crew-{idle,watch,away,wrong}.png`.
 
 ## Brand tokens (whole app, `web/src/index.css`)

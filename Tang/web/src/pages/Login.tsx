@@ -133,9 +133,8 @@ export default function Login() {
         <div className="flex min-h-11 items-center gap-2.5">
           <BrandMark onDark withSub={false} />
         </div>
-        <p className="flex flex-col gap-1 font-display text-[22px] leading-tight font-medium min-[900px]:max-w-[16ch] min-[900px]:text-[44px]">
-          <span>{t.tagline.th}</span>
-          <span className="font-sans text-[13px] font-normal text-accent-ink/80 min-[900px]:text-base">{t.tagline.en}</span>
+        <p data-testid="headline" className="font-brand text-[34px] leading-[0.95] tracking-[0.01em] uppercase min-[900px]:max-w-[14ch] min-[900px]:text-[64px]">
+          {t.headline}
         </p>
         <div className="mx-auto mt-auto w-full max-w-[300px] min-[900px]:my-auto min-[900px]:max-w-[720px] min-[900px]:pb-6">
           <LoginCrew mood={mood} look={look} lookRow={focus === 'pw' ? 1 : 0} wrongKey={wrongKey} />
@@ -308,13 +307,28 @@ export default function Login() {
               </p>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" aria-disabled={welcome || undefined}>
-              <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
+            {/* Blob button (Tang 2026-11-24): seigaiha waves (Japanese wave pattern) drift across it, and on hover
+                crimson blobs rise and merge (gooey filter below) to fill it. Decoration is aria-hidden. */}
+            <Button type="submit" size="lg" className="blob-btn w-full" aria-disabled={welcome || undefined}>
+              <span aria-hidden="true" className="blob-btn-blobs">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <span aria-hidden="true" className="blob-btn-waves" />
+              <span className="relative z-[2] inline-flex flex-wrap items-baseline gap-x-1.5">
                 <span>{(welcome ? t.welcome : t.login).th}</span>{' '}
                 <span className="text-[12.5px] font-medium text-accent-ink/90">{(welcome ? t.welcome : t.login).en}</span>
               </span>
-              {welcome ? <Check aria-hidden="true" className="size-5" /> : <ArrowRight aria-hidden="true" className="size-5" />}
+              {welcome ? <Check aria-hidden="true" className="relative z-[2] size-5" /> : <ArrowRight aria-hidden="true" className="relative z-[2] size-5" />}
             </Button>
+            <svg aria-hidden="true" width="0" height="0" className="absolute">
+              <filter id="blob-goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur" />
+                <feColorMatrix in="blur" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+              </filter>
+            </svg>
             <p role="status" data-testid="welcome-status" className="sr-only">
               {welcome ? bi(t.welcome) : ''}
             </p>

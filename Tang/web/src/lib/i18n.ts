@@ -72,7 +72,8 @@ export const t = {
     en: "You can sign in, but detection won't work until the API is back.",
   },
   checkAgain: { th: 'ตรวจสอบอีกครั้ง', en: 'Check again' },
-  tagline: { th: 'นับท่อเหล็กจากรูปถ่าย', en: 'Photograph the pipe ends. The system counts, you confirm.' },
+  // Login headline (Tang 2026-11-24): English only, the project name.
+  headline: 'Adaptive AI for Pipeline Counting',
   loginFoot: { th: 'SPDS', en: 'Capstone prototype' },
   navNew: { th: 'ตรวจนับใหม่', en: 'New detection' },
   navProcessing: { th: 'ตรวจนับใหม่', en: 'Processing · New detection' },
