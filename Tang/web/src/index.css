@@ -246,12 +246,13 @@
   transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.5, 1);
 }
 .glass-pill-y {
-  /* items are 56 px tall with a 4 px gap, inside 4 px nav padding */
-  top: 4px;
+  /* --y / --h: the current item's offset and height, measured in AppShell (labels can wrap) */
+  top: 0;
   left: 4px;
   right: 4px;
-  height: 56px;
-  transform: translateY(calc(var(--i) * 60px));
+  height: var(--h, 56px);
+  transform: translateY(var(--y, 4px));
+  transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.5, 1), height 0.3s ease;
 }
 .glass-pill-x {
   top: 4px;
@@ -459,4 +460,35 @@
 @keyframes seigaiha-drift {
   from { background-position: 0 0; }
   to { background-position: 64px 0; }
+}
+
+/* ---- Glassy dashboard (Tang 2026-11-24): blue-and-white glassmorphism ---- */
+.dash-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 45% at 88% 6%, rgb(77 124 245 / 0.55), transparent 70%),
+    radial-gradient(34% 40% at 32% 30%, rgb(9 49 141 / 0.22), transparent 70%),
+    radial-gradient(30% 35% at 72% 70%, rgb(253 145 204 / 0.3), transparent 70%),
+    radial-gradient(45% 50% at 8% 96%, rgb(110 170 255 / 0.45), transparent 70%),
+    linear-gradient(160deg, #e6eeff 0%, #f5f8ff 45%, #dfe9ff 100%);
+}
+.glass-card {
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.52));
+  border: 1px solid rgb(255 255 255 / 0.8);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 1px 0 rgb(9 49 141 / 0.04),
+    0 10px 30px -12px rgb(9 49 141 / 0.22);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.glass-lift { transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.5, 1), box-shadow 0.25s ease; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .glass-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.95), 0 18px 40px -14px rgb(9 49 141 / 0.35);
+  }
 }

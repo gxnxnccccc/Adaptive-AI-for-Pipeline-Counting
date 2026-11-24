@@ -72,7 +72,7 @@ const Skel = ({ className }: { className?: string }) => (
 // 4 placeholder cards while the chart data (or the recharts chunk) loads.
 const ChartsSkeleton = () =>
   Array.from({ length: 4 }, (_, i) => (
-    <div key={i} data-testid="chart-loading" className="rounded-card border border-line bg-surface p-4 shadow-card">
+    <div key={i} data-testid="chart-loading" className="glass-card rounded-card p-4">
       <Skel className="mb-3 h-5 w-40" />
       <Skel className="h-[230px]" />
     </div>
@@ -100,14 +100,14 @@ type Kpi = { key: string; icon: LucideIcon; label: Pair; value: ReactNode; foot:
 
 function KpiCard({ k, loading }: { k: Kpi; loading: boolean }) {
   return (
-    <article data-testid={`kpi-${k.key}`} className="flex min-w-0 flex-col gap-2.5 rounded-card border border-line bg-surface shadow-card p-3.5 @min-[760px]:p-[18px]">
+    <article data-testid={`kpi-${k.key}`} className="glass-lift flex min-w-0 flex-col gap-2.5 glass-card rounded-card p-3.5 @min-[760px]:p-[18px]">
       <div className="flex items-start gap-2.5 text-sm font-semibold">
         <span
           data-testid={`kpi-${k.key}-icon`}
           data-alarm={k.alarm || undefined}
           className={cn(
             'grid size-9 shrink-0 place-items-center rounded-control border',
-            k.alarm ? 'border-err/35 bg-err/12 text-err' : 'border-accent/30 bg-accent/12 text-accent',
+            k.alarm ? 'border-err/35 bg-err/12 text-err' : 'border-white/60 bg-linear-to-br from-accent to-[#4d7cf5] text-white shadow-[0_6px_14px_-6px_rgb(9_49_141/0.6)]',
           )}
         >
           <k.icon aria-hidden="true" className="size-5" />
@@ -380,6 +380,8 @@ export default function Dashboard() {
 
   return (
     <div className="@container flex flex-col gap-4">
+      {/* Glassy dashboard (Tang 2026-11-24): soft blue-and-white backdrop behind translucent cards. */}
+      <div aria-hidden="true" className="dash-backdrop" />
       {/* Next to the page title when AppShell offers the slot, else inline (tests, standalone). */}
       {slot ? createPortal(toolbar, slot) : toolbar}
 
@@ -446,7 +448,7 @@ export default function Dashboard() {
       {empty && (
         <section
           data-testid="dashboard-empty"
-          className="flex flex-col items-center gap-1.5 rounded-card border border-line bg-surface shadow-card px-4 py-12 text-center"
+          className="flex flex-col items-center gap-1.5 glass-card rounded-card px-4 py-12 text-center"
         >
           <svg viewBox="0 0 150 90" aria-hidden="true" fill="none" strokeWidth="2" className="mb-2 h-[90px] w-[150px]">
             <path d="M10 80h130" className="stroke-line-2" />
@@ -471,7 +473,7 @@ export default function Dashboard() {
       )}
 
       {!error && (
-        <section aria-labelledby="rt-t" className="@container rounded-card border border-line bg-surface shadow-card">
+        <section aria-labelledby="rt-t" className="@container glass-card rounded-card">
           <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 pt-4 pb-1">
             <h2 id="rt-t" className="flex flex-col text-base leading-snug font-bold">
               <span>{t.recent10.th}</span>

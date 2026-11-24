@@ -51,7 +51,7 @@ function Card({ id, title, aside, legend, note, table, children }: {
   children: ReactNode
 }) {
   return (
-    <article aria-labelledby={`${id}-t`} className="flex min-w-0 flex-col rounded-card border border-line bg-surface shadow-card">
+    <article aria-labelledby={`${id}-t`} className="flex min-w-0 flex-col glass-card rounded-card">
       <div className="flex items-start justify-between gap-2.5 px-4 pt-4 pb-1">
         <h2 id={`${id}-t`} className="flex flex-col text-base leading-snug font-bold">
           <span>{title.th}</span>

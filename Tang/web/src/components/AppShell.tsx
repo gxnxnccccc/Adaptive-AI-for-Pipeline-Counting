@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, Outlet, useLocation } from 'react-router'
 import { ArrowLeft, ChartColumn, LogOut, ScanLine, type LucideIcon } from 'lucide-react'
 import ApiChip, { useApiStatus } from '@/components/ApiChip'
@@ -77,13 +77,28 @@ export default function AppShell() {
   // Pages portal their toolbar here (Dashboard: Updated, Refresh, New detection).
   const [toolbarSlot, setToolbarSlot] = useState<HTMLElement | null>(null)
   const shell = useMemo<ShellContext>(() => ({ toolbarSlot, recheckApi: recheck }), [toolbarSlot, recheck])
+  const active = NAV.findIndex((n) => n.activeOn.includes(pathname))
+  // Sidebar glass pill follows the current link's real box (a label can wrap to 3 lines).
+  const sideNav = useRef<HTMLElement>(null)
+  const [pill, setPill] = useState<{ y: number; h: number } | null>(null)
+  useLayoutEffect(() => {
+    const nav = sideNav.current
+    if (!nav) return
+    const measure = () => {
+      const a = nav.querySelectorAll<HTMLElement>('a')[active]
+      setPill(a ? { y: a.offsetTop, h: a.offsetHeight } : null)
+    }
+    measure()
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null
+    ro?.observe(nav)
+    return () => ro?.disconnect()
+  }, [active])
 
   if (!operator) return <Navigate to="/login" replace />
 
   const page = PAGES[pathname]
   const onResult = pathname === '/result'
   const current = (n: NavItem) => (n.activeOn.includes(pathname) ? ('page' as const) : undefined)
-  const active = NAV.findIndex((n) => n.activeOn.includes(pathname))
 
   return (
     <div className="flex min-h-dvh flex-col desk:grid desk:grid-cols-[248px_minmax(0,1fr)] desk:items-start">
@@ -94,7 +109,13 @@ export default function AppShell() {
         <Brand withSub />
         {/* Liquid glass: one glass pill behind the current item that slides (and wobbles) between them.
             The soft blue/pink blobs behind give the glass something to blur. */}
-        <nav aria-label={bi(t.menu)} data-testid="side-nav" className="relative isolate flex flex-col gap-1 p-1" style={{ ['--i' as string]: active }}>
+        <nav
+          ref={sideNav}
+          aria-label={bi(t.menu)}
+          data-testid="side-nav"
+          className="relative isolate flex flex-col gap-1 p-1"
+          style={pill ? { ['--y' as string]: `${pill.y}px`, ['--h' as string]: `${pill.h}px` } : undefined}
+        >
           <span aria-hidden="true" className="glass-blobs" />
           {active >= 0 && (
             <span aria-hidden="true" data-testid="glass-pill" className="glass-pill glass-pill-y">
@@ -106,7 +127,7 @@ export default function AppShell() {
               key={n.to}
               to={n.to}
               aria-current={current(n)}
-              className="group relative z-[2] flex h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-white/40 hover:text-tx aria-[current=page]:text-tx aria-[current=page]:hover:bg-transparent"
+              className="group relative z-[2] flex min-h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-white/40 hover:text-tx aria-[current=page]:text-tx aria-[current=page]:hover:bg-transparent"
             >
               <n.icon aria-hidden="true" className="size-5 shrink-0 group-aria-[current=page]:text-accent" />
               <span className="flex min-w-0 flex-col leading-tight">

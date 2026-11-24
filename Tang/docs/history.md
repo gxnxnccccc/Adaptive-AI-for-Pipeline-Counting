@@ -2,6 +2,15 @@
 
 Short update log so any session can continue. Details live in plans, decisions, and the problem log.
 
+## 2026-11-24 (Mon)
+**Done**
+- 12 screen-review fixes (toast at the bottom, old messages cleared after detection, "review first" instead of a greyed picker, Photo OK chip, to-check labels say this photo / all photos, crop view fits added boxes, duplicate DO warns once, little-data rule for the rate trend + KPI, Login: one error place, no build stamp on phones, Forgot line aligned, 100% label not clipped).
+- Processing: liquid glass menu pill (sidebar + phone tabs), files scatter across the drop zone on hover, camera rises + flashes before the live view.
+- Login v3: animal crew from Tang's sheets (panther, wolf, gorilla, fox, raccoon; names removed), headline "Adaptive AI for Pipeline Counting" in a bold condensed font (Anton now, Sublime when installed), blob button with seigaiha waves.
+- Dashboard: glassmorphism (translucent cards on a blue-and-white backdrop, KPI cards lift on hover).
+**Next**
+- Tang: try everything on the SPDS shortcut; install Sublime on the demo PC if the licence is bought. Stop adding features: rehearse the 30 Nov demo.
+
 ## 2026-11-17 (Mon)
 **Done**
 - Design-week "What to fix" built: Login crew gap + small build stamp, duplicate photos skipped, quiet compression line, numbered thumbnails, Cancel as a text link, Draft = "Not confirmed yet", model-vs-actual list under 3 batches. 8 screen specs in `docs/design/screens/` (KPI delta left for Later, no Figma).
