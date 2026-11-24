@@ -83,6 +83,7 @@ export default function AppShell() {
   const page = PAGES[pathname]
   const onResult = pathname === '/result'
   const current = (n: NavItem) => (n.activeOn.includes(pathname) ? ('page' as const) : undefined)
+  const active = NAV.findIndex((n) => n.activeOn.includes(pathname))
 
   return (
     <div className="flex min-h-dvh flex-col desk:grid desk:grid-cols-[248px_minmax(0,1fr)] desk:items-start">
@@ -91,13 +92,21 @@ export default function AppShell() {
         className="sticky top-0 hidden h-dvh flex-col gap-5 border-r border-line bg-surface px-3.5 py-5 shadow-[1px_0_2px_rgb(0_0_0/0.05)] desk:flex"
       >
         <Brand withSub />
-        <nav aria-label={bi(t.menu)} className="flex flex-col gap-1">
+        {/* Liquid glass: one glass pill behind the current item that slides (and wobbles) between them.
+            The soft blue/pink blobs behind give the glass something to blur. */}
+        <nav aria-label={bi(t.menu)} data-testid="side-nav" className="relative isolate flex flex-col gap-1 p-1" style={{ ['--i' as string]: active }}>
+          <span aria-hidden="true" className="glass-blobs" />
+          {active >= 0 && (
+            <span aria-hidden="true" data-testid="glass-pill" className="glass-pill glass-pill-y">
+              <span key={active} className="liquid-glass" />
+            </span>
+          )}
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
               aria-current={current(n)}
-              className="group flex min-h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-raised hover:text-tx aria-[current=page]:bg-pink-soft aria-[current=page]:text-tx aria-[current=page]:shadow-[inset_3px_0_0_var(--color-accent)]"
+              className="group relative z-[2] flex h-14 items-center gap-3 rounded-control px-3 py-2 font-semibold text-tx-2 hover:bg-white/40 hover:text-tx aria-[current=page]:text-tx aria-[current=page]:hover:bg-transparent"
             >
               <n.icon aria-hidden="true" className="size-5 shrink-0 group-aria-[current=page]:text-accent" />
               <span className="flex min-w-0 flex-col leading-tight">
@@ -183,16 +192,22 @@ export default function AppShell() {
 
         <nav
           aria-label={bi(t.menu)}
-          className="sticky bottom-0 z-30 grid grid-cols-2 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] desk:hidden"
+          className="sticky bottom-0 isolate z-30 grid grid-cols-2 border-t border-line bg-surface/85 p-1 pb-[calc(4px+env(safe-area-inset-bottom))] backdrop-blur-md desk:hidden"
+          style={{ ['--i' as string]: active }}
         >
+          <span aria-hidden="true" className="glass-blobs" />
+          {active >= 0 && (
+            <span aria-hidden="true" className="glass-pill glass-pill-x">
+              <span key={active} className="liquid-glass" />
+            </span>
+          )}
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
               aria-current={current(n)}
-              className="relative flex min-h-15 flex-col items-center justify-center gap-px text-sm font-semibold text-tx-2 aria-[current=page]:text-accent"
+              className="relative z-[2] flex min-h-14 flex-col items-center justify-center gap-px text-sm font-semibold text-tx-2 aria-[current=page]:text-accent"
             >
-              {current(n) && <span aria-hidden="true" className="absolute inset-x-[28%] -top-px h-[3px] rounded-b-[3px] bg-pink" />}
               <n.icon aria-hidden="true" className="size-5" />
               <span>{n.tab.th}</span>
               <span className="text-xs font-normal opacity-85">{n.tab.en}</span>

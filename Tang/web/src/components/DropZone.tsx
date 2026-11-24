@@ -9,6 +9,17 @@ type Props = { onFiles: (files: File[]) => void; disabled?: boolean }
 
 // Visible outline when the sr-only input inside the label has keyboard focus (same as the global :focus-visible).
 const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent'
+// Where each little file lands (x in % of the box width from the centre, y in px, tilt). Kept clear of the text.
+const SCATTER = [
+  { x: -40, y: -42, r: -14, photo: true },
+  { x: -30, y: 34, r: 9 },
+  { x: -44, y: 6, r: 6 },
+  { x: 38, y: -38, r: 12, photo: true },
+  { x: 43, y: 26, r: -10 },
+  { x: 27, y: 42, r: 5, photo: true },
+  { x: -18, y: -48, r: -4 },
+  { x: 20, y: -50, r: 16 },
+]
 const camBtn = cn(buttonVariants({ variant: 'secondary', size: 'lg' }), 'w-full flex-1 whitespace-normal')
 
 export default function DropZone({ onFiles, disabled = false }: Props) {
@@ -78,7 +89,7 @@ export default function DropZone({ onFiles, disabled = false }: Props) {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={cn(
-          'flex cursor-pointer flex-col items-center gap-1 rounded-control border-2 border-dashed border-line-2 px-4 py-8 text-center text-tx-2 transition-colors',
+          'drop-zone relative isolate flex cursor-pointer flex-col items-center gap-1 overflow-hidden rounded-control border-2 border-dashed border-line-2 px-4 py-8 text-center text-tx-2 transition-colors [container-type:inline-size]',
           'hover:border-accent hover:bg-accent/10',
           focusRing,
           dragging && 'border-accent bg-accent/10',
@@ -86,9 +97,19 @@ export default function DropZone({ onFiles, disabled = false }: Props) {
         )}
       >
         <input ref={pickRef} type="file" accept="image/*" multiple disabled={disabled} onChange={onChange} className="sr-only" />
-        <Upload aria-hidden="true" className="size-11 text-tx-3" />
-        <span className="mt-1.5">{t.tapToChoose.th}</span>
-        <span className="text-sm text-tx-3">{t.tapToChoose.en}</span>
+        {/* Hover / drag: a pile of files scatters out across the box (decoration only). */}
+        <span aria-hidden="true" className="drop-files">
+          {SCATTER.map((f, i) => (
+            <span
+              key={i}
+              className={cn('drop-file', f.photo && 'drop-file-photo')}
+              style={{ ['--x' as string]: f.x, ['--y' as string]: `${f.y}px`, ['--r' as string]: `${f.r}deg`, ['--d' as string]: `${i * 35}ms` }}
+            />
+          ))}
+        </span>
+        <Upload aria-hidden="true" className="drop-icon relative z-[1] size-11 text-tx-3" />
+        <span className="relative z-[1] mt-1.5">{t.tapToChoose.th}</span>
+        <span className="relative z-[1] text-sm text-tx-3">{t.tapToChoose.en}</span>
       </label>
 
       {camOpen && (

@@ -154,6 +154,22 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
 
   return createPortal(
     <div className="fixed inset-0 z-[100] grid place-items-center bg-tx/40 p-4 backdrop-blur-sm max-sm:p-0">
+      {/* Intro (Tang 2026-11-24): a camera rises from the bottom, flashes, then the live view appears.
+          CSS only and pointer-events none, so the dialog underneath works the whole time (the stream starts at once). */}
+      <div aria-hidden="true" data-testid="cam-intro" className="cam-intro">
+        <svg viewBox="0 0 160 120" className="cam-intro-body">
+          <rect x="52" y="10" width="40" height="18" rx="5" fill="#062466" />
+          <rect x="112" y="16" width="22" height="12" rx="3" fill="#fd91cc" />
+          <rect x="8" y="24" width="144" height="90" rx="16" fill="#09318d" />
+          <rect x="8" y="24" width="144" height="18" rx="9" fill="#ffffff" opacity=".12" />
+          <circle cx="80" cy="70" r="34" fill="#ffffff" />
+          <circle cx="80" cy="70" r="27" fill="#0a1a4a" />
+          <circle cx="80" cy="70" r="17" fill="#1d3f9a" />
+          <circle cx="72" cy="62" r="6" fill="#ffffff" opacity=".85" />
+          <circle cx="132" cy="44" r="5" fill="#fd91cc" />
+        </svg>
+        <span className="cam-intro-flash" />
+      </div>
       <div
         ref={dialogRef}
         role="dialog"
@@ -161,7 +177,7 @@ export default function CameraModal({ onShots, onClose, onPickInstead }: Props) 
         aria-labelledby="cam-title"
         data-cam={state}
         onKeyDown={onKeyDown}
-        className="flex w-full max-w-[min(760px,calc((100dvh_-_230px)_*_1.333))] flex-col rounded-card border border-line bg-surface shadow-pop max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
+        className="cam-dialog flex w-full max-w-[min(760px,calc((100dvh_-_230px)_*_1.333))] flex-col rounded-card border border-line bg-surface shadow-pop max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
       >
         <div className="flex items-start gap-3 px-[18px] pt-[18px] max-sm:px-3 max-sm:pt-3">
           <h2 id="cam-title" className="flex flex-col text-lg leading-tight font-bold">
