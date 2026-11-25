@@ -2,6 +2,12 @@
 
 Short update log so any session can continue. Details live in plans, decisions, and the problem log.
 
+## 2026-11-25 (Wed)
+**Done**
+- Login crew v4: Tang's 5 character prompts integrated (designer-toy style; Tang centre front with crossed arms + glowing headphones; Opor with laptop glow + backpack; Hymm in a varsity jacket with key; Game with racket + forgotten shuttlecock; Guy sitting with his laptop). Each member's 4 prompt expressions are wired to the 5 login states; idle tails, glow and key move. Prompts saved word for word: `docs/design/character-prompts.md`; sheet of all states: `docs/design/img/login-v4-crew-expressions.png`.
+**Next**
+- Tang: reopen the SPDS shortcut and check the crew. After this, freeze features and rehearse the 30 Nov demo.
+
 ## 2026-11-24 (Mon)
 **Done**
 - 12 screen-review fixes (toast at the bottom, old messages cleared after detection, "review first" instead of a greyed picker, Photo OK chip, to-check labels say this photo / all photos, crop view fits added boxes, duplicate DO warns once, little-data rule for the rate trend + KPI, Login: one error place, no build stamp on phones, Forgot line aligned, 100% label not clipped).

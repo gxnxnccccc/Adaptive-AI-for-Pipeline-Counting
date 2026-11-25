@@ -1,5 +1,31 @@
 # Screen: Login with the RAI crew   Ref: Tang's palette + flat-character pictures (chat, 2026-11-16)   Plan: `docs/plans/brand-crew-login.md`
 
+## v4, 2026-11-25: character design integrated (current)
+Source: Tang's 5 character prompts (`character-prompts.md`) + his sheets. Screenshots: `img/login-v4-character-design.png`, all states: `img/login-v4-crew-expressions.png`.
+
+**Style:** designer-toy chibi (big heads), thick dark outlines, glossy highlights. Left to right: Hymm, Opor, **Tang in the centre, in front** (the leader), Game, Guy. Heights still follow the real ones; Guy sits cross-legged (his hero pose).
+
+| Member | Drawn from the prompt | Idle motion | Lean / jump |
+|---|---|---|---|
+| Tang, black panther | arms crossed, yellow cat eyes, purple fur sheen, techwear jacket (purple + cyan), oversized headphones with a cyan glow, long tail, cheek plaster | headphone glow pulses, tail sways | normal / a bit higher |
+| Opor, wolf | sleepy eyes, visor goggles, oversized white hoodie, backpack, cargo pants, laptop with an ice-blue light bar + screen glow, fluffy tail | laptop glow pulses | half (introvert) / low |
+| Hymm, gorilla | wide grin, heavy brows, red varsity jacket (striped rib, snaps, gold "H"), gold chain, gold shades on his head, plain red key held up | key jiggles | a bit less / a bit less |
+| Game, fox | big sparkly eyes, pink + orange hair, goggles, X clip, white sporty jacket, lavender skirt, striped socks, racket, big tail, **a shuttlecock she forgot in her hair** | tail wags fast | most / highest |
+| Guy, raccoon | round head, mask, round glasses, green beanie, cream sweater, sitting with a plain silver laptop, striped tail | tail sways | little / small bounce |
+
+**4 expressions each, wired to the login states** (`data-expr` on each member; test: `LoginCrew.test.tsx`)
+| State | Tang | Opor | Hymm | Game | Guy |
+|---|---|---|---|---|---|
+| Page open (idle) | confident: half-lid + smirk | tired: sleepy lids | smug: one brow up, grin | excited: sparkly eyes | relaxed: soft lids, smile |
+| Typing (watch) | competitive: brows down, grin | focused: narrowed eyes | cool: shades slide down | surprised: wide eyes, "o" | thinking: brow up, "…" |
+| Password shown (away) | confident: eyes closed | tired: dozes off, "zz" | cool: shades on | distracted: looks up, "♪" | relaxed: eyes closed |
+| Wrong password | angry: "!" (grumpy, not scary) | surprised: sweat drop | laughing | confused: "?" | surprised: "!" |
+| Correct password | excited: ^^ + sparkle | happy: ^^ | lovestruck: heart eyes | excited: wink + sparkle | laughing: ^^ + sparkle |
+
+All motion is CSS and stops under reduced motion (the expressions still change). No brand logos (see `character-prompts.md`).
+
+## Older notes
+
 **Update 2026-11-24 (Tang's character sheets):** the crew are now animals: Tang = black panther (purple/black/cyan techwear, headphones), Opor = wolf (silver/ice blue/navy hoodie, goggles, laptop), Hymm = gorilla (red/gold/charcoal, gold shades + chain, red key), Game = fox (pink/orange/cream, goggles, badminton racket), Guy = raccoon (mint/cream/brown, beanie, round glasses, headphones). Names under them removed. No brand logos on props. Headline = "Adaptive AI for Pipeline Counting" (English only) in `--font-brand` (Sublime Bold Condensed if installed on the PC, else free Anton). Sign in = blob button with seigaiha waves. Screenshot: `img/login-v3-animal-crew.png`. The older notes below describe v2 (flat people).
 
 Designed in code (decision 2026-11-04), not Figma. Screenshots: `img/login-crew-{idle,watch,away,wrong}.png`.
