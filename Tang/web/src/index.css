@@ -139,14 +139,15 @@
 .crew-lean {
   transition: transform 0.5s var(--spring) calc(var(--i) * 45ms);
 }
-.crew[data-mood='watch'] .crew-lean { transform: rotate(5deg); }
-.crew[data-mood='away'] .crew-lean { transform: rotate(-3deg); }
+/* --lean / --hop are per member (LoginCrew `lean`, `hop`): introverts lean in less, Game jumps highest. */
+.crew[data-mood='watch'] .crew-lean { transform: rotate(calc(5deg * var(--lean, 1))); }
+.crew[data-mood='away'] .crew-lean { transform: rotate(calc(-3deg * var(--lean, 1))); }
 .crew[data-mood='wrong'] .crew-lean {
   animation: crew-recoil 1.2s ease-in-out calc(var(--i) * 40ms) both;
 }
 @keyframes crew-recoil {
   0% { transform: rotate(0); }
-  20%, 78% { transform: rotate(-9deg); }
+  20%, 78% { transform: rotate(calc(-9deg * var(--lean, 1))); }
   100% { transform: rotate(0); }
 }
 .crew[data-mood='happy'] .crew-lean {
@@ -155,9 +156,9 @@
 @keyframes crew-jump {
   0%, 100% { transform: translateY(0); }
   12% { transform: translateY(4px) scaleY(0.94); }
-  40% { transform: translateY(-38px) rotate(-3deg); }
+  40% { transform: translateY(calc(-38px * var(--hop, 1))) rotate(-3deg); }
   64% { transform: translateY(0) scaleY(0.97); }
-  80% { transform: translateY(-9px); }
+  80% { transform: translateY(calc(-9px * var(--hop, 1))); }
 }
 .crew-face {
   transform-box: fill-box;
@@ -189,26 +190,58 @@
 }
 .crew[data-mood='away'] .crew-pupils { transform: translate(-5px, -1px); }
 .crew[data-mood='wrong'] .crew-pupils { transform: translate(-3px, 0); }
+/* Brow angles come from each member's expression (inline transform); this only animates the change. */
 .crew-brow-l,
 .crew-brow-r {
   transform-box: fill-box;
   transform-origin: 50% 50%;
   transition: transform 0.3s var(--spring);
 }
-.crew[data-mood='watch'] :is(.crew-brow-l, .crew-brow-r) { transform: translateY(-4px); }
-.crew[data-mood='happy'] :is(.crew-brow-l, .crew-brow-r) { transform: translateY(-7px); }
-.crew[data-mood='wrong'] .crew-brow-l { transform: translateY(-2px) rotate(-16deg); }
-.crew[data-mood='wrong'] .crew-brow-r { transform: translateY(-2px) rotate(16deg); }
-.crew-mouth > * {
-  opacity: 0;
-  transition: opacity 0.15s;
+.crew-eyes-still { animation: none; } /* closed / happy / heart eyes don't blink */
+/* A new mouth or mark pops in when the mood changes. */
+.crew-pop {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: crew-pop 0.28s var(--spring) both;
 }
-.crew[data-mood='idle'] .m-smile,
-.crew[data-mood='happy'] .m-smile,
-.crew[data-mood='watch'] .m-o,
-.crew[data-mood='away'] .m-flat,
-.crew[data-mood='wrong'] .m-frown {
-  opacity: 1;
+@keyframes crew-pop {
+  from { transform: scale(0.3); opacity: 0; }
+}
+.crew-mark {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: crew-pop 0.4s var(--spring) 0.1s both;
+}
+/* Hymm's shades slide from his head onto his eyes. */
+.crew-shades { transition: transform 0.35s var(--spring); }
+/* Idle life: tails sway (Game's wags), Tang's headphones + Opor's laptop glow, Hymm jiggles his key,
+   heart eyes beat. Pivots are % of the part's own box (tail base: inline; key: bottom centre). */
+.crew-tail,
+.crew-key {
+  transform-box: fill-box;
+  animation: crew-sway 2.6s ease-in-out infinite alternate;
+}
+.crew-wag { animation-duration: 0.8s; }
+.crew-key {
+  transform-origin: 50% 100%;
+  animation-duration: 1.4s;
+}
+@keyframes crew-sway {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+.crew-glow { animation: crew-glow 1.8s ease-in-out infinite alternate; }
+@keyframes crew-glow {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+.crew-heart {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: crew-heart 0.5s ease-in-out infinite alternate;
+}
+@keyframes crew-heart {
+  to { transform: scale(1.18); }
 }
 
 @media (max-width: 899px) {
