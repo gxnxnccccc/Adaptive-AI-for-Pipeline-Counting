@@ -26,5 +26,10 @@ Sources: Pipe_Detector_App_Documentation_Capstone.pdf, "Update งานเพ�
 6. Guidance v1: brightness + blur check before upload (P1)
 7. Compression v1 on upload, original vs compressed size shown (P5)
 
+### Added by web interview 3 Nov (see `docs/design/web-brief.md`)
+- DO Number + pipe size + note + Actual Amount fields; mismatch rule: typed Actual != box count -> warning, note required, both saved (proposed, confirm with Tang)
+- TH/EN toggle in the header, Thai default
+- History filter/search (date, DO Number, pipe size); cut first if M4 slips
+
 ## Backlog (after 30 Nov)
-- Real model integration, push to company DB, auth, panorama, SSIM/PSNR benchmark report, usability test
+- Real model integration, push to company DB, auth, panorama, SSIM/PSNR benchmark report, usability test, supervisor role screens

@@ -91,3 +91,25 @@ Full route: `docs/skill-routes.md`. Always: `karpathy-guidelines` when coding. U
 
 ## 6. Working time
 Weekdays 08:30-11:30. Sunday 10:30-11:30 = weekly review (`scribe`). Don't push work into evenings; if the plan doesn't fit, cut scope.
+
+## Auto-use plugins (Tang never types slash commands)
+Tang just says what he wants in plain words. You pick and invoke the right tool yourself, say which one in a few words, then do it. Never ask Tang to type a `/command`.
+
+| Tang says (any wording, Thai or EN) | You use |
+|---|---|
+| UI / page / look / design / "make it nicer" / audit / polish / animate | `impeccable` skill (design + critique). Edits go through `coder`, only inside `Tang/web/`. For "just review", critique only, no edits. |
+| "did we do this before?" / "last time" / "why did we choose X" | `claude-mem:mem-search` (search -> timeline -> get_observations) |
+| Plan a feature / "how should we build X" | `claude-mem:make-plan` -> save to `docs/plans/<feature>.md`, then `planner` flow |
+| Execute an existing plan | `claude-mem:do`, still one task at a time through `coder` -> `tester` -> `reviewer` |
+| Session getting long / stuck in a loop / "stop for today" | `claude-mem:handoff` (write HANDOFF.md under `Tang/docs/`) |
+| Unfamiliar code / "explain this" / "where is X" | `claude-mem:smart-explore`, `claude-mem:what-the` |
+| "what automations / hooks / setup should we have" | `claude-code-setup:claude-automation-recommender` (recommend only, change nothing) |
+| Multi-step work session | `task-observer` runs in the background: log corrections, stage proposed skill updates, apply NONE without Tang's yes |
+| Bug / test fail | `systematic-debugging` first, then `coder` |
+
+Rules for all plugins:
+- Plugins never override sections 2-4. Still only write inside `Tang/`, still no push/merge/PR, still max 3 FAIL loops.
+- Plugin output that wants to change files outside `Tang/`, add a dependency, or touch settings = stop and ask Tang.
+- `claude-mem` and `headroom` run on their own (memory capture, context compression). Don't mention them unless relevant.
+- `omniroute` is a separate local gateway app, not part of this repo. Don't configure it unless Tang asks.
+- No guessing which tool: if two fit, pick the narrower one and say so in one line.
